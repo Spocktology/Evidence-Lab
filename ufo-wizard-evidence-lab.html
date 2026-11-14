@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en" class="ufw-solo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UFO Wizard Evidence Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout idea: a night-shift evidence bench. One column of numbered stages,
+     the picture pinned in view while the controls scroll beside or beneath it. */
+  --w-bg:#10141d;        /* night-sky slate */
+  --w-panel:#181e2b;
+  --w-panel-2:#212a3b;
+  --w-line:#33405a;
+  --w-ink:#ece8dd;       /* case-file paper white */
+  --w-ink-2:#a8b1c4;
+  --w-accent:#f0b23e;    /* sodium-lamp amber: actions and the active stage */
+  --w-accent-ink:#1b1304;
+  --w-check:#ff8a6b;     /* needs a second look */
+  --w-note:#93bbff;      /* context worth knowing */
+  --w-good:#78d6b1;      /* supports the file */
+  --w-display:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --w-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --w-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+html.ufw-solo{color-scheme:dark;background:var(--w-bg)}
+html.ufw-solo body{margin:0;background:var(--w-bg)}
+
+.ufw{box-sizing:border-box;max-width:1200px;margin:0 auto;padding:20px 16px 56px;background:var(--w-bg);color:var(--w-ink);font:400 16px/1.5 var(--w-body);-webkit-text-size-adjust:100%}
+.ufw *,.ufw *::before,.ufw *::after{box-sizing:border-box}
+.ufw [hidden]{display:none !important}
+.ufw h1,.ufw h2,.ufw h3,.ufw p,.ufw ul,.ufw dl,.ufw dd{margin:0;padding:0}
+.ufw ul{list-style:none}
+.ufw a{color:var(--w-accent)}
+.ufw button,.ufw input,.ufw select{font:inherit;color:inherit}
+.ufw :focus-visible{outline:2px solid var(--w-accent);outline-offset:2px}
+.ufw .mono{font-family:var(--w-mono);font-size:.86em}
+
+/* masthead */
+.ufw .mast{display:flex;flex-direction:column;gap:4px;padding-bottom:18px}
+.ufw .brand{font:600 12px/1 var(--w-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--w-accent)}
+.ufw h1{font:700 clamp(40px,9vw,64px)/.92 var(--w-display);letter-spacing:.01em;text-transform:uppercase;text-wrap:balance}
+.ufw .lede{max-width:60ch;color:var(--w-ink-2)}
+.ufw .lede strong{color:var(--w-ink);font-weight:700}
+
+/* stage rail */
+.ufw .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.ufw .step{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;padding:10px 12px 12px;background:var(--w-panel);border:0;border-top:3px solid var(--w-line);border-radius:0 0 6px 6px;cursor:pointer;min-width:0}
+.ufw .step:disabled{cursor:default;opacity:.55}
+.ufw .step .num{font:700 28px/1 var(--w-display);color:var(--w-ink-2)}
+.ufw .step .name{font:700 19px/1.1 var(--w-display);letter-spacing:.04em;text-transform:uppercase}
+.ufw .step .what{font-size:13px;line-height:1.35;color:var(--w-ink-2)}
+.ufw .step[aria-current="step"]{border-top-color:var(--w-accent);background:var(--w-panel-2)}
+.ufw .step[aria-current="step"] .num{color:var(--w-accent)}
+.ufw .step.done{border-top-color:var(--w-good)}
+.ufw .step.done .num{color:var(--w-good)}
+@media (max-width:560px){.ufw .step .what{display:none}.ufw .step{padding:8px 10px 10px}.ufw .step .name{font-size:16px}}
+
+/* shared pieces */
+.ufw .stagehead{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.ufw h2{font:700 30px/1 var(--w-display);letter-spacing:.03em;text-transform:uppercase}
+.ufw h3{font:700 20px/1.1 var(--w-display);letter-spacing:.05em;text-transform:uppercase;color:var(--w-ink)}
+.ufw .sub{color:var(--w-ink-2);max-width:65ch}
+.ufw .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 18px;border-radius:6px;border:1px solid var(--w-line);background:var(--w-panel-2);font-weight:700;cursor:pointer;text-decoration:none;color:var(--w-ink)}
+.ufw .btn:hover{border-color:var(--w-ink-2)}
+.ufw .btn.primary{background:var(--w-accent);border-color:var(--w-accent);color:var(--w-accent-ink)}
+.ufw .btn.primary:hover{filter:brightness(1.08)}
+.ufw .btn.small{min-height:38px;padding:6px 12px;font-size:14px}
+.ufw .btn:disabled{opacity:.5;cursor:not-allowed}
+.ufw .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ufw .card{background:var(--w-panel);border:1px solid var(--w-line);border-radius:8px;padding:14px}
+.ufw .stack{display:flex;flex-direction:column;gap:14px}
+.ufw .hint{font-size:14px;line-height:1.4;color:var(--w-ink-2)}
+
+/* stage 1: intake */
+.ufw .drop{position:relative;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:34px 18px;background:var(--w-panel);border:2px dashed var(--w-line);border-radius:10px}
+.ufw .drop.over{border-color:var(--w-accent);background:var(--w-panel-2)}
+.ufw .drop .big{font:700 30px/1 var(--w-display);letter-spacing:.03em;text-transform:uppercase}
+.ufw .drop input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.ufw .tip{max-width:62ch;margin:12px auto 0;font-size:14px;color:var(--w-ink-2);text-align:center}
+.ufw .busy{display:flex;align-items:center;gap:10px;padding:18px;color:var(--w-ink-2)}
+.ufw .spin{width:18px;height:18px;border:2px solid var(--w-line);border-top-color:var(--w-accent);border-radius:50%;animation:ufwspin .8s linear infinite}
+@keyframes ufwspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.ufw .spin{animation:none}}
+
+.ufw .filebar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between}
+.ufw .filebar .fname{font:600 15px/1.3 var(--w-mono);overflow-wrap:anywhere}
+.ufw .filebar .fsub{font-size:14px;color:var(--w-ink-2)}
+.ufw .tally{display:flex;flex-wrap:wrap;gap:8px}
+.ufw .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font:600 12px/1.5 var(--w-mono);letter-spacing:.06em;text-transform:uppercase;border:1px solid currentColor;white-space:nowrap}
+.ufw .pill.check{color:var(--w-check)}.ufw .pill.note{color:var(--w-note)}.ufw .pill.good{color:var(--w-good)}
+.ufw .flags{display:flex;flex-direction:column;gap:8px}
+.ufw .flag{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;padding:12px 14px;background:var(--w-panel);border-radius:6px;border-left:4px solid var(--w-line)}
+.ufw .flag.check{border-left-color:var(--w-check)}.ufw .flag.note{border-left-color:var(--w-note)}.ufw .flag.good{border-left-color:var(--w-good)}
+.ufw .flag .ft{font-weight:700}
+.ufw .flag .fx{grid-column:2;color:var(--w-ink-2);font-size:15px}
+@media (max-width:480px){.ufw .flag{grid-template-columns:1fr}.ufw .flag .fx{grid-column:1}.ufw .flag .pill{justify-self:start}}
+.ufw .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.ufw .fact{display:flex;flex-direction:column;gap:4px}
+.ufw .fact .k{font:600 12px/1.2 var(--w-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--w-ink-2)}
+.ufw .fact .v{font:600 16px/1.35 var(--w-mono);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.ufw .fact .n{font-size:14px;line-height:1.4;color:var(--w-ink-2)}
+.ufw .finger .hash{font:400 13px/1.5 var(--w-mono);overflow-wrap:anywhere;color:var(--w-ink)}
+.ufw .thumbs{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.ufw .thumbs figure{margin:0;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--w-ink-2)}
+.ufw .thumbs img{max-width:100%;height:120px;width:auto;border:1px solid var(--w-line);background:#000}
+.ufw details.grp{background:var(--w-panel);border:1px solid var(--w-line);border-radius:8px}
+.ufw details.grp>summary{cursor:pointer;padding:12px 14px;font-weight:700;display:flex;justify-content:space-between;gap:10px}
+.ufw details.grp>summary .cnt{font:400 13px/1.6 var(--w-mono);color:var(--w-ink-2)}
+.ufw .kv{display:grid;grid-template-columns:minmax(120px,34%) 1fr;gap:0;border-top:1px solid var(--w-line)}
+.ufw .kv>div{padding:8px 14px;border-bottom:1px solid var(--w-line);min-width:0}
+.ufw .kv .kk{color:var(--w-ink-2);font-size:14px}
+.ufw .kv .kk small{display:block;font-size:12.5px;line-height:1.35;opacity:.85;margin-top:2px}
+.ufw .kv .vv{font:400 13.5px/1.5 var(--w-mono);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+@media (max-width:480px){.ufw .kv{grid-template-columns:1fr}.ufw .kv .kk{border-bottom:0;padding-bottom:0}}
+
+/* bench: viewer + panel */
+.ufw .bench{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
+@media (min-width:920px){.ufw .bench{grid-template-columns:minmax(0,1.45fr) minmax(320px,1fr)}}
+.ufw .viewer{position:sticky;top:0;z-index:5;display:flex;flex-direction:column;gap:8px;padding:8px 0;background:var(--w-bg)}
+@media (min-width:920px){.ufw .viewer{top:12px}}
+.ufw .view{position:relative;overflow:hidden;background:#07090e;border-radius:4px;height:240px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.ufw .view.zoomed{touch-action:none;cursor:grab}
+.ufw .view.zoomed.drag{cursor:grabbing}
+.ufw .view::before,.ufw .view::after{content:"";position:absolute;width:22px;height:22px;border:2px solid var(--w-accent);opacity:.8;pointer-events:none;z-index:2}
+.ufw .view::before{left:6px;top:6px;border-right:0;border-bottom:0}
+.ufw .view::after{right:6px;bottom:6px;border-left:0;border-top:0}
+.ufw .view canvas{position:absolute;left:50%;top:50%;transform-origin:center center;display:block}
+.ufw .view .tag{position:absolute;left:12px;bottom:10px;z-index:3;padding:2px 8px;background:rgba(7,9,14,.8);border-radius:3px;font:600 11px/1.6 var(--w-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--w-accent)}
+.ufw .vbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ufw .vbar .grow{flex:1 1 auto}
+.ufw .ib{min-width:40px;min-height:40px;padding:4px 10px;border-radius:6px;border:1px solid var(--w-line);background:var(--w-panel);cursor:pointer;font-weight:700}
+.ufw .ib:hover{border-color:var(--w-ink-2)}
+.ufw .ib[aria-pressed="true"]{background:var(--w-accent);border-color:var(--w-accent);color:var(--w-accent-ink)}
+.ufw .zoomv{min-width:52px;text-align:center;font:600 13px/1 var(--w-mono);color:var(--w-ink-2);font-variant-numeric:tabular-nums}
+.ufw .transport{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ufw .transport input[type=range]{flex:1 1 140px}
+.ufw .transport .time{font:600 13px/1 var(--w-mono);color:var(--w-ink-2);font-variant-numeric:tabular-nums;min-width:118px;text-align:right}
+.ufw .transport select{min-height:40px;border-radius:6px;border:1px solid var(--w-line);background:var(--w-panel);padding:0 6px}
+.ufw video.src{position:absolute;width:2px;height:2px;opacity:0;pointer-events:none}
+
+.ufw .looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
+.ufw .look{min-height:46px;padding:8px 10px;border-radius:6px;border:1px solid var(--w-line);background:var(--w-panel);font-weight:700;font-size:15px;line-height:1.2;cursor:pointer;text-align:left}
+.ufw .look:hover{border-color:var(--w-ink-2)}
+.ufw .look[aria-pressed="true"]{border-color:var(--w-accent);box-shadow:inset 0 0 0 1px var(--w-accent);color:var(--w-accent)}
+.ufw .explain{border-left:4px solid var(--w-accent);background:var(--w-panel);border-radius:0 6px 6px 0;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.ufw .explain .et{font-weight:700}
+.ufw .explain p{font-size:15px;color:var(--w-ink-2)}
+.ufw .explain p b{color:var(--w-ink)}
+.ufw fieldset{border:0;margin:0;padding:0;min-width:0;display:flex;flex-direction:column;gap:14px}
+.ufw legend{padding:0;margin-bottom:10px;font:600 12px/1.2 var(--w-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--w-accent)}
+.ufw .ctl{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.ufw .ctl label{font-weight:700}
+.ufw .ctl output{font:600 14px/1 var(--w-mono);color:var(--w-ink-2);font-variant-numeric:tabular-nums;min-width:38px;text-align:right}
+.ufw .ctl input[type=range],.ufw .ctl .seg,.ufw .ctl .hint{grid-column:1/-1}
+.ufw input[type=range]{width:100%;height:32px;accent-color:var(--w-accent);margin:0}
+.ufw .seg{display:flex;flex-wrap:wrap;gap:6px}
+.ufw .seg button{flex:1 1 auto;min-height:40px;padding:4px 12px;border-radius:6px;border:1px solid var(--w-line);background:var(--w-panel);cursor:pointer;font-weight:700;font-size:15px}
+.ufw .seg button[aria-pressed="true"]{background:var(--w-accent);border-color:var(--w-accent);color:var(--w-accent-ink)}
+.ufw .opt{display:flex;gap:10px;align-items:flex-start}
+.ufw .opt input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--w-accent);flex:none}
+.ufw .changes li{padding:4px 0;border-bottom:1px solid var(--w-line);font:400 14px/1.5 var(--w-mono)}
+.ufw .changes li:last-child{border-bottom:0}
+.ufw .progress{height:8px;border-radius:4px;background:var(--w-panel-2);overflow:hidden}
+.ufw .progress i{display:block;height:100%;width:0;background:var(--w-accent)}
+.ufw .toast{position:sticky;bottom:12px;z-index:9;margin-top:16px;padding:10px 14px;border-radius:6px;background:var(--w-ink);color:var(--w-bg);font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.45)}
+.ufw .toast a{color:var(--w-bg);text-decoration:underline;white-space:nowrap}
+.ufw .warn{border-left:4px solid var(--w-check);background:var(--w-panel);padding:12px 14px;border-radius:0 6px 6px 0}
+.ufw .foot{margin-top:28px;padding-top:14px;border-top:1px solid var(--w-line);font-size:13.5px;color:var(--w-ink-2);max-width:75ch}
+</style>
+</head>
+<body>
+<div id="ufw" class="ufw">
+
+  <header class="mast">
+    <div class="brand">The UFO Wizard</div>
+    <h1>Evidence Lab</h1>
+    <p class="lede">Photo and video analysis for field investigators, one plain step at a time. <strong>Your file stays on this device.</strong> Nothing is uploaded.</p>
+  </header>
+
+  <nav class="steps" aria-label="Stages">
+    <button type="button" class="step" id="ufw-step1" aria-current="step"><span class="num">01</span><span class="name">Metadata</span><span class="what">Read what the file says about itself</span></button>
+    <button type="button" class="step" id="ufw-step2" disabled><span class="num">02</span><span class="name">Enhance</span><span class="what">Bring out what is hard to see</span></button>
+    <button type="button" class="step" id="ufw-step3" disabled><span class="num">03</span><span class="name">Download</span><span class="what">Save a copy for the case file</span></button>
+  </nav>
+
+  <!-- STAGE 1 -->
+  <section id="ufw-st1" aria-labelledby="ufw-h1">
+    <div id="ufw-intake">
+      <div class="stagehead">
+        <h2 id="ufw-h1">Start with the file</h2>
+        <p class="sub">Add the photo or video exactly as the witness gave it to you. The lab first reads the hidden information inside the file: when and where it was taken, on what device, and whether anything has touched it since.</p>
+      </div>
+      <div class="drop" id="ufw-drop">
+        <div class="big">Drop a photo or video here</div>
+        <div class="row" style="justify-content:center">
+          <label class="btn primary" for="ufw-file">Choose a file</label>
+          <button type="button" class="btn" id="ufw-sample">Try a practice photo</button>
+        </div>
+        <input type="file" id="ufw-file" accept="image/*,video/*,.heic,.heif,.mov,.mp4,.m4v">
+        <div class="hint">JPEG, PNG, HEIC, MP4 and MOV work best.</div>
+      </div>
+      <p class="tip">On a phone, pick the file from Files when you can. Some photo-library pickers hand over a converted copy with the location removed.</p>
+    </div>
+    <div id="ufw-busy" class="busy" hidden><span class="spin"></span><span>Reading the file…</span></div>
+    <div id="ufw-report" class="stack" hidden></div>
+  </section>
+
+  <!-- STAGES 2 + 3 -->
+  <section id="ufw-bench" hidden>
+    <div class="stagehead">
+      <h2 id="ufw-h2">Enhance</h2>
+      <p class="sub" id="ufw-sub2"></p>
+    </div>
+    <div class="bench">
+      <div class="viewer" id="ufw-viewer">
+        <div class="view" id="ufw-view">
+          <canvas id="ufw-canvas" width="2" height="2" aria-label="Preview of the file with your changes"></canvas>
+          <div class="tag" id="ufw-tag" hidden>Original</div>
+        </div>
+        <div class="vbar">
+          <button type="button" class="ib" id="ufw-zout" aria-label="Zoom out">−</button>
+          <span class="zoomv" id="ufw-zval">100%</span>
+          <button type="button" class="ib" id="ufw-zin" aria-label="Zoom in">+</button>
+          <button type="button" class="ib" id="ufw-zfit">Fit</button>
+          <span class="grow"></span>
+          <button type="button" class="ib" id="ufw-cmp" aria-pressed="false">Hold for original</button>
+        </div>
+        <div class="transport" id="ufw-transport" hidden>
+          <button type="button" class="ib" id="ufw-play" aria-label="Play">Play</button>
+          <button type="button" class="ib" id="ufw-fb" aria-label="Back one frame">◀ 1</button>
+          <button type="button" class="ib" id="ufw-ff" aria-label="Forward one frame">1 ▶</button>
+          <input type="range" id="ufw-seek" min="0" max="1000" value="0" step="1" aria-label="Position in video">
+          <span class="time" id="ufw-time">0:00.00 / 0:00.00</span>
+          <select id="ufw-speed" aria-label="Playback speed"><option value="0.25">¼ speed</option><option value="0.5">½ speed</option><option value="1" selected>Normal</option></select>
+          <button type="button" class="ib" id="ufw-mute" aria-pressed="false">Mute</button>
+        </div>
+        <video class="src" id="ufw-video" playsinline preload="auto"></video>
+      </div>
+
+      <div>
+        <!-- stage 2 panel -->
+        <div id="ufw-p2" class="stack">
+          <div class="stack" style="gap:8px">
+            <h3>Quick looks</h3>
+            <p class="hint">Tap one. Each is a ready-made setting for a common question, and the box below says what it does.</p>
+            <div class="looks" id="ufw-looks"></div>
+          </div>
+          <div class="explain" id="ufw-explain" aria-live="polite"></div>
+          <div class="card stack" id="ufw-fine">
+            <h3>Fine-tune</h3>
+            <div id="ufw-controls" class="stack" style="gap:22px"></div>
+            <div class="row"><button type="button" class="btn small" id="ufw-reset">Reset everything</button></div>
+          </div>
+          <div class="row"><button type="button" class="btn primary" id="ufw-to3">Next: Download</button><button type="button" class="btn" id="ufw-back1">Back to metadata</button></div>
+        </div>
+
+        <!-- stage 3 panel -->
+        <div id="ufw-p3" class="stack" hidden>
+          <div class="card stack" style="gap:8px">
+            <h3>Changes in this copy</h3>
+            <ul class="changes" id="ufw-changes"></ul>
+            <p class="hint">These are written into the analysis notes so anyone reviewing the case can repeat your steps.</p>
+          </div>
+          <div class="card stack" id="ufw-dlphoto">
+            <h3 id="ufw-dlh">Enhanced photo</h3>
+            <div class="ctl"><span style="font-weight:700">File type</span><span></span>
+              <div class="seg" id="ufw-fmt"><button type="button" data-v="png" aria-pressed="true">PNG, exact</button><button type="button" data-v="jpg" aria-pressed="false">JPEG, smaller</button></div>
+              <p class="hint">PNG saves every pixel exactly as you see it. JPEG makes a smaller file but adds a little compression of its own.</p>
+            </div>
+            <label class="opt"><input type="checkbox" id="ufw-label" checked><span>Add a label strip under the picture<br><span class="hint">Marks it as an enhanced copy and names the original file, so it can never be mistaken for the original.</span></span></label>
+            <label class="opt" id="ufw-cropopt" hidden><input type="checkbox" id="ufw-crop"><span>Save only the zoomed-in area<br><span class="hint">You are zoomed in. Tick this to save just what is on screen.</span></span></label>
+            <div class="row"><button type="button" class="btn primary" id="ufw-savephoto">Download enhanced photo</button></div>
+          </div>
+          <div class="card stack" id="ufw-dlvideo" hidden>
+            <h3>Enhanced video</h3>
+            <p class="hint">The lab plays the video through once at normal speed and records it with your changes. Keep this tab open and in front until it finishes.</p>
+            <label class="opt"><input type="checkbox" id="ufw-audio" checked><span>Include the sound</span></label>
+            <div class="progress" id="ufw-prog" hidden><i></i></div>
+            <div class="row"><button type="button" class="btn primary" id="ufw-savevideo">Download enhanced video</button><button type="button" class="btn" id="ufw-cancelvideo" hidden>Cancel</button></div>
+            <div class="row" id="ufw-vready" hidden><button type="button" class="btn primary" id="ufw-vsave">Save the recorded video</button></div>
+            <p class="hint" id="ufw-vnote"></p>
+          </div>
+          <div class="card stack">
+            <h3>Analysis notes</h3>
+            <p class="hint">A plain text record for the case file: the original file's fingerprint, everything found in the metadata, what stood out, and the changes you made.</p>
+            <div class="row"><button type="button" class="btn" id="ufw-savenotes">Download analysis notes</button></div>
+          </div>
+          <p class="hint">Keep the witness's original file untouched in the case file. The enhanced copy is a working aid, not the evidence itself.</p>
+          <div class="row"><button type="button" class="btn" id="ufw-back2">Back to enhance</button><button type="button" class="btn" id="ufw-new">Start a new file</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="toast" id="ufw-toast" role="status" aria-live="polite" hidden></div>
+
+  <p class="foot">Metadata can be edited or removed, and enhancement can create shapes that were never there. Treat what you find here as leads to check against the witness account, weather, flight and satellite data, not as proof on its own.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+const root = $('#ufw');
+if (!root) return;
+
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  if (props) for (const k in props) {
+    const v = props[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat(3)) {
+    if (c == null || c === false) continue;
+    e.append(c.nodeType ? c : document.createTextNode(String(c)));
+  }
+  return e;
+}
+
+/* ---------- state ---------- */
+const DEF = { shadows: 0, exposure: 0, brightness: 0, contrast: 0, saturation: 0, sharpen: 0, fx: 'none', fxAmt: 50, fxSize: 2, chan: 'all', invert: false };
+const S = {
+  file: null, kind: null, url: null, isSample: false, hash: null, hashNote: '',
+  facts: [], flags: [], groups: [], thumbUrl: null,
+  img: null, canEnhance: false, why: '', W: 0, H: 0, origW: 0, origH: 0, scaled: false,
+  fps: 30, duration: 0, hasAudio: true,
+  adj: Object.assign({}, DEF), look: 'original', stage: 1,
+  zoom: 1, panX: 0, panY: 0, fit: 1, bypass: false,
+  fmt: 'png', exporting: false
+};
+
+/* ---------- small helpers ---------- */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const pad = (n, w) => String(n).padStart(w || 2, '0');
+function bytes(n) {
+  if (n < 1024) return n + ' bytes';
+  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+  if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB';
+  return (n / 1073741824).toFixed(2) + ' GB';
+}
+function niceDate(d) {
+  let hr = d.getHours(); const ap = hr >= 12 ? 'PM' : 'AM'; hr = hr % 12 || 12;
+  return MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear() + ', ' + hr + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()) + ' ' + ap;
+}
+function niceUTC(d) {
+  let hr = d.getUTCHours(); const ap = hr >= 12 ? 'PM' : 'AM'; hr = hr % 12 || 12;
+  return MONTHS[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear() + ', ' + hr + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' ' + ap + ' UTC';
+}
+function exifDate(s) {
+  if (s instanceof Date) return { text: niceDate(s), ms: s.getTime() };
+  const m = /^(\d{4})[:\-](\d{2})[:\-](\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/.exec(String(s || ''));
+  if (!m || m[1] === '0000') return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0));
+  return { text: niceDate(d), ms: d.getTime() };
+}
+function clock(t) {
+  t = Math.max(0, t || 0);
+  const m = Math.floor(t / 60), s = t - m * 60;
+  return m + ':' + (s < 10 ? '0' : '') + s.toFixed(2);
+}
+const COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+const compass = deg => COMPASS[Math.round(((deg % 360) + 360) % 360 / 22.5) % 16];
+function coord(lat, lon) {
+  return Math.abs(lat).toFixed(5) + '° ' + (lat >= 0 ? 'N' : 'S') + ', ' + Math.abs(lon).toFixed(5) + '° ' + (lon >= 0 ? 'E' : 'W');
+}
+const mapLink = (lat, lon) => 'https://www.openstreetmap.org/?mlat=' + lat.toFixed(5) + '&mlon=' + lon.toFixed(5) + '#map=14/' + lat.toFixed(5) + '/' + lon.toFixed(5);
+function baseName(n) { return String(n || 'file').replace(/\.[^.]+$/, '').replace(/[^\w\-. ]+/g, '_').slice(0, 80) || 'file'; }
+function fmtVal(v) {
+  if (v == null) return '';
+  if (v instanceof Date) return niceDate(v);
+  if (v instanceof ArrayBuffer) return 'binary data (' + v.byteLength + ' bytes)';
+  if (ArrayBuffer.isView(v)) return 'binary data (' + v.byteLength + ' bytes)';
+  if (Array.isArray(v)) {
+    const a = v.slice(0, 16).map(fmtVal).join(', ');
+    return v.length > 16 ? a + ', … (' + v.length + ' values)' : a;
+  }
+  if (typeof v === 'number') return Number.isInteger(v) ? String(v) : String(+v.toPrecision(7));
+  if (typeof v === 'object') { let s; try { s = JSON.stringify(v, (k, x) => ArrayBuffer.isView(x) ? '[binary]' : x); } catch (e) { s = String(v); } return s.length > 400 ? s.slice(0, 400) + '…' : s; }
+  const s = String(v).replace(/\u0000+/g, ' ').trim();
+  return s.length > 400 ? s.slice(0, 400) + '…' : s;
+}
+const humanKey = k => String(k).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').replace(/_/g, ' ');
+
+let toastTimer = 0;
+function toast(msg, link) {
+  const t = $('#ufw-toast'); t.replaceChildren(msg, link ? ' ' : '', link || ''); t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, link ? 20000 : 6000);
+}
+
+/* ---------- saving files ---------- */
+const inViewer = !!(window.claude && typeof window.claude.use === 'function');
+const dlReady = inViewer ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+let lastUrl = null;
+async function saveFile(name, blob) {
+  if (inViewer) {
+    const cap = await dlReady;
+    if (!cap) { toast('Saving is switched off in this preview. It works once the lab is on your own site.'); return false; }
+    try { await cap.save({ filename: name, data: blob }); toast('Saved ' + name); return true; }
+    catch (e) { toast(e && e.code === 'declined' ? 'Save cancelled.' : 'This file could not be saved here (' + ((e && e.code) || 'error') + ').'); return false; }
+  }
+  if (lastUrl) URL.revokeObjectURL(lastUrl);
+  lastUrl = URL.createObjectURL(blob);
+  const a = h('a', { href: lastUrl, download: name, style: 'display:none' });
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('Saved ' + name + ' to your downloads.', h('a', { href: lastUrl, download: name }, 'Did not arrive? Save it again'));
+  return true;
+}
+
+/* ---------- plain-language glossary for the full metadata list ---------- */
+const GLOSS = {
+  Make: 'Who made the camera or phone.',
+  Model: 'The exact camera or phone model.',
+  Software: 'The program that last wrote this file. A phone shows its system version; an editor shows its own name.',
+  ModifyDate: 'When the file was last written. If it differs from the capture time, the file was saved again later.',
+  DateTimeOriginal: 'The camera clock at the moment the picture was taken.',
+  CreateDate: 'When the camera stored the picture. Normally the same as the capture time.',
+  OffsetTimeOriginal: 'The time zone the camera clock was set to.',
+  ExposureTime: 'How long the shutter was open, in seconds. Longer times smear moving lights into streaks.',
+  FNumber: 'The lens opening. Smaller numbers let in more light.',
+  ISO: 'Sensor sensitivity. High values brighten dark scenes but add speckled grain.',
+  FocalLength: 'The lens focal length in millimeters. Longer means more zoomed in.',
+  FocalLengthIn35mmFormat: 'Focal length on a common scale, so different cameras can be compared.',
+  Flash: 'Whether the flash fired.',
+  DigitalZoomRatio: 'Enlargement done by software after the lens. It adds size but no real detail.',
+  LensModel: 'Which lens took the picture. Phones have several.',
+  Orientation: 'How the device was held, so viewers know which way is up.',
+  WhiteBalance: 'How the camera corrected the color of the light.',
+  ExposureProgram: 'The shooting mode the camera was in.',
+  ExposureMode: 'Whether the camera or the user chose the exposure.',
+  MeteringMode: 'How the camera measured the light.',
+  BrightnessValue: 'How bright the camera judged the scene. Negative numbers mean a dark scene.',
+  ExposureCompensation: 'A deliberate lighter or darker offset chosen at capture.',
+  SubjectDistance: 'The distance the lens was focused at.',
+  SceneCaptureType: 'The scene type the camera chose, such as night or landscape.',
+  GPSLatitude: 'Where the device believed it was, north or south.',
+  GPSLongitude: 'Where the device believed it was, east or west.',
+  GPSAltitude: 'Height above sea level in meters, as the device estimated it.',
+  GPSImgDirection: 'Compass heading the camera was pointing. Very useful for matching against aircraft, planets and stars.',
+  GPSSpeed: 'How fast the device was moving. A moving car or plane explains a lot of blur.',
+  GPSDateStamp: 'Date from the GPS satellites, in UTC.',
+  GPSTimeStamp: 'Time from the GPS satellites, in UTC. Compare it with the camera clock.',
+  GPSHPositioningError: 'How far off the location could be, in meters.',
+  ColorSpace: 'The color standard used to store the picture.',
+  ExifImageWidth: 'Picture width in pixels, as the camera recorded it.',
+  ExifImageHeight: 'Picture height in pixels, as the camera recorded it.',
+  CreatorTool: 'The program that created or last edited the file.',
+  UserComment: 'A free-text note. Some phones write "Screenshot" here.',
+  ImageDescription: 'A caption stored in the file.',
+  History: 'A log some editors keep of every save and change.'
+};
+const GROUP_NAMES = {
+  ifd0: 'Camera and file', exif: 'Capture settings', gps: 'Location', xmp: 'Editing and software notes (XMP)',
+  iptc: 'Captions and credits (IPTC)', ifd1: 'Embedded preview', thumbnail: 'Embedded preview', jfif: 'File structure (JFIF)', ihdr: 'File structure (PNG)', interop: 'Compatibility', icc: 'Color profile', makerNote: 'Maker notes'
+};
+const EDITORS = /photoshop|lightroom|gimp|snapseed|picsart|canva|affinity|pixelmator|paint\.net|facetune|vsco|capcut|inshot|premiere|after effects|davinci|final cut|imovie|lavf|lavc|handbrake|ffmpeg|kinemaster|filmora|topaz|luminar|remini|faceapp|adobe|polarr|photopea|windows photo/i;
+const AIMARK = /midjourney|dall[\-·. ]?e|stable diffusion|firefly|trainedalgorithmicmedia|made with google ai|ai[ _-]generated|openai|chatgpt/i;
+
+/* ---------- photo metadata ---------- */
+async function readPhoto(file, dims) {
+  let d = null, err = null;
+  if (window.exifr) {
+    try {
+      d = await window.exifr.parse(file, { tiff: true, ifd0: true, exif: true, gps: true, ifd1: true, interop: false, xmp: true, iptc: true, icc: false, jfif: true, ihdr: true, makerNote: false, userComment: true, mergeOutput: false, translateValues: true, reviveValues: false });
+    } catch (e) { err = e; }
+    try { S.thumbUrl = await window.exifr.thumbnailUrl(file) || null; } catch (e) { S.thumbUrl = null; }
+  } else err = new Error('reader not loaded');
+  d = d || {};
+  const i0 = d.ifd0 || {}, ex = d.exif || {}, gp = d.gps || {}, xmp = d.xmp || {}, ip = d.iptc || {};
+  const facts = [], flags = [];
+  const hasCam = !!(i0.Make || i0.Model || ex.DateTimeOriginal || ex.ExposureTime);
+
+  if (S.isSample) flags.push({ level: 'note', title: 'This is the built-in practice photo', text: 'It is a drawing made by this page, with made-up camera details, so you can try every step. It is not evidence.' });
+  if (err && !window.exifr) flags.push({ level: 'check', title: 'The metadata reader did not load', text: 'Check your internet connection and reload the page. Enhancing still works.' });
+
+  // when
+  const taken = exifDate(ex.DateTimeOriginal || ex.CreateDate), modified = exifDate(i0.ModifyDate);
+  const off = ex.OffsetTimeOriginal || ex.OffsetTime;
+  if (taken) facts.push({ k: 'Taken', v: taken.text + (off ? '  (UTC' + off + ')' : ''), n: 'From the camera\'s own clock, so it is only as right as that clock was set.' + (off ? '' : ' No time zone was stored. Confirm it with the witness.') });
+  else facts.push({ k: 'Taken', v: 'Not recorded', n: 'The file carries no capture time. Use the witness account and ask for the original file.' });
+
+  // camera
+  const cam = [i0.Make, i0.Model].filter(Boolean).map(fmtVal).join(' ').replace(/^(\S+) \1\b/i, '$1');
+  if (cam) {
+    facts.push({ k: 'Device', v: cam + (ex.LensModel ? '\n' + fmtVal(ex.LensModel) : ''), n: 'Look up this model to learn what its lens and sensor can and cannot resolve.' });
+    flags.push({ level: 'good', title: 'Camera identified: ' + cam, text: 'The file still carries the device details a camera writes. That is what an original, unprocessed file looks like.' });
+  }
+
+  // where
+  let lat = typeof gp.latitude === 'number' ? gp.latitude : null, lon = typeof gp.longitude === 'number' ? gp.longitude : null;
+  if (lat == null && Array.isArray(gp.GPSLatitude) && Array.isArray(gp.GPSLongitude)) {
+    const dms = a => a[0] + (a[1] || 0) / 60 + (a[2] || 0) / 3600;
+    lat = dms(gp.GPSLatitude) * (/^S/i.test(gp.GPSLatitudeRef || '') ? -1 : 1);
+    lon = dms(gp.GPSLongitude) * (/^W/i.test(gp.GPSLongitudeRef || '') ? -1 : 1);
+  }
+  if (lat != null && lon != null && isFinite(lat) && isFinite(lon)) {
+    const dir = typeof gp.GPSImgDirection === 'number' ? gp.GPSImgDirection : null;
+    let v = coord(lat, lon);
+    if (typeof gp.GPSAltitude === 'number') v += '\n' + Math.round(gp.GPSAltitude) + ' m above sea level';
+    if (dir != null) v += '\nCamera facing ' + Math.round(dir) + '° (' + compass(dir) + ')';
+    facts.push({ k: 'Location', v, n: 'Where the device believed it was.' + (dir != null ? ' The facing direction lets you check that part of the sky for aircraft, planets and bright stars.' : ''), link: mapLink(lat, lon), linkText: 'Open this spot on a map' });
+    flags.push({ level: 'good', title: 'Location recorded', text: 'Compare it with where the witness says they were standing.' + (dir != null ? ' The camera heading was stored too.' : '') });
+  } else if (hasCam) {
+    facts.push({ k: 'Location', v: 'Not recorded', n: 'Location was switched off on the device, or it was removed when the file was shared.' });
+  }
+
+  // settings
+  const et = typeof ex.ExposureTime === 'number' ? ex.ExposureTime : null;
+  const parts = [];
+  if (et) parts.push(et >= 1 ? (+et.toFixed(1)) + ' s' : '1/' + Math.round(1 / et) + ' s');
+  if (typeof ex.FNumber === 'number') parts.push('f/' + (+ex.FNumber.toFixed(1)));
+  if (ex.ISO != null) parts.push('ISO ' + fmtVal(ex.ISO));
+  if (typeof ex.FocalLength === 'number') parts.push((+ex.FocalLength.toFixed(1)) + ' mm' + (ex.FocalLengthIn35mmFormat ? ' (' + ex.FocalLengthIn35mmFormat + ' mm equiv.)' : ''));
+  const zoom = typeof ex.DigitalZoomRatio === 'number' ? ex.DigitalZoomRatio : 1;
+  if (parts.length) {
+    let n = 'Shutter time, lens opening, sensitivity and focal length.';
+    const f35 = +ex.FocalLengthIn35mmFormat;
+    if (f35 > 0 && !(zoom > 1.01)) {
+      const fov = 2 * Math.atan(36 / (2 * f35)) * 180 / Math.PI;
+      n += ' The picture spans about ' + Math.round(fov) + '° along its long side, so 1% of that side is about ' + (fov / 100).toFixed(1) + '°. The full Moon is 0.5° across.';
+    }
+    facts.push({ k: 'Camera settings', v: parts.join('  ·  '), n });
+  }
+  if (dims) facts.push({ k: 'Picture size', v: dims.w + ' × ' + dims.h + ' px  (' + (dims.w * dims.h / 1e6).toFixed(1) + ' MP)', n: !hasCam && Math.max(dims.w, dims.h) <= 2048 ? 'This size is typical of a copy shrunk by a social or messaging app.' : 'More pixels mean a small object can be enlarged further before it turns to blocks.' });
+
+  // flags
+  const sw = fmtVal(i0.Software), tool = fmtVal(xmp.CreatorTool);
+  const editor = EDITORS.test(sw) ? sw : EDITORS.test(tool) ? tool : '';
+  let dump = ''; try { dump = JSON.stringify([xmp, ip, sw, i0.ImageDescription, ex.UserComment], (k, x) => ArrayBuffer.isView(x) ? undefined : x) || ''; } catch (e) {}
+  if (AIMARK.test(dump)) flags.push({ level: 'check', title: 'The file mentions an AI image tool', text: 'Its notes contain the name or marker of an AI generator or AI editing feature. Ask the witness exactly how the picture was made.' });
+  if (editor) flags.push({ level: 'check', title: 'Saved by editing software: ' + editor, text: 'The file passed through a program that can change pictures. That does not prove it was altered, but you are not looking at the camera\'s own file. Ask for the original.' });
+  else if (xmp.History) flags.push({ level: 'check', title: 'The file carries an edit history', text: 'Some editors log each save inside the file. Open "Editing and software notes" below to read it.' });
+  if (/screenshot/i.test(fmtVal(ex.UserComment)) || /screen ?shot/i.test(file.name)) flags.push({ level: 'check', title: 'This looks like a screenshot', text: 'A screenshot is a picture of a screen, not the camera\'s file. Detail is lost and all original metadata is gone. Ask for the photo itself.' });
+  if (!hasCam && !S.isSample) flags.push({ level: 'check', title: 'No camera information in this file', text: 'Cameras and phones write their details into every photo. They are missing here, which usually means the file came through social media, a messaging app, a screenshot or an editor. Ask the witness to send the original straight from the device, by email at full size or by cable.' });
+  if (taken && modified && Math.abs(modified.ms - taken.ms) > 90000) flags.push({ level: 'note', title: 'Saved again after it was taken', text: 'The capture time is ' + taken.text + ' but the file was last written ' + modified.text + '. Something re-saved it in between.' });
+  if (et && et >= 1 / 15) flags.push({ level: 'note', title: 'Slow shutter: ' + (et >= 1 ? (+et.toFixed(1)) + ' s' : '1/' + Math.round(1 / et) + ' s'), text: 'The shutter stayed open long enough for hand shake to matter. Points of light, such as stars, planes and streetlights, can smear into streaks, squiggles and odd shapes.' });
+  const iso = Array.isArray(ex.ISO) ? ex.ISO[0] : ex.ISO;
+  if (typeof iso === 'number' && iso >= 1600) flags.push({ level: 'note', title: 'High sensitivity: ISO ' + iso, text: 'The camera was straining to see in the dark. Expect grain and stray bright pixels that can pass for faint lights.' });
+  if (/\bfired\b/i.test(fmtVal(ex.Flash)) && !/not fire|no flash/i.test(fmtVal(ex.Flash))) flags.push({ level: 'note', title: 'The flash fired', text: 'Flash lights up dust, insects, rain and mist close to the lens. They show as bright discs often called orbs.' });
+  if (zoom > 1.01) flags.push({ level: 'note', title: 'Digital zoom was used: ' + (+zoom.toFixed(1)) + '×', text: 'The camera enlarged the picture with software. Fine detail on a small object may be invented by that enlargement.' });
+  if (/png|webp|gif/i.test(file.type) && !hasCam) flags.push({ level: 'note', title: 'Not a camera file type', text: 'Cameras save JPEG, HEIC or raw files. A ' + (file.type.split('/')[1] || '').toUpperCase() + ' is normally a screenshot, a download or an export from another program.' });
+  if (S.thumbUrl) flags.push({ level: 'note', title: 'The file has a built-in preview picture', text: 'Compare it with the main picture below. If an object appears in one and not the other, the photo was edited after it was taken.' });
+
+  const groups = [];
+  for (const g of Object.keys(d)) {
+    const o = d[g]; if (!o || typeof o !== 'object') continue;
+    const rows = Object.keys(o).filter(k => o[k] != null && fmtVal(o[k]) !== '').map(k => ({ k, v: fmtVal(o[k]) }));
+    if (rows.length) groups.push({ name: GROUP_NAMES[g] || humanKey(g), rows });
+  }
+  return { facts, flags, groups };
+}
+
+/* ---------- video container reader (MP4 / MOV) ---------- */
+const L1 = new TextDecoder('latin1'), U8 = new TextDecoder('utf-8');
+const cc = (dv, p) => L1.decode(new Uint8Array(dv.buffer, dv.byteOffset + p, 4));
+function kids(dv, s, e) {
+  const out = []; let p = s, guard = 0;
+  while (p + 8 <= e && guard++ < 5000) {
+    let len = dv.getUint32(p), hd = 8;
+    if (len === 1) { if (p + 16 > e) break; len = Number(dv.getBigUint64(p + 8)); hd = 16; } else if (len === 0) len = e - p;
+    if (len < hd || p + len > e) break;
+    out.push({ type: cc(dv, p + 4), num: dv.getUint32(p + 4), start: p + hd, end: p + len });
+    p += len;
+  }
+  return out;
+}
+const MAC = 2082844800;
+const qtDate = sec => { const ms = (sec - MAC) * 1000; return sec && ms > 0 ? new Date(ms) : null; };
+const CODECS = { avc1: 'H.264', avc3: 'H.264', hvc1: 'H.265 (HEVC)', hev1: 'H.265 (HEVC)', av01: 'AV1', vp09: 'VP9', mp4v: 'MPEG-4', mp4a: 'AAC', 'ac-3': 'Dolby AC-3', samr: 'AMR', sawb: 'AMR-WB', lpcm: 'PCM', sowt: 'PCM', twos: 'PCM', Opus: 'Opus', apcn: 'ProRes', apch: 'ProRes', jpeg: 'Motion JPEG' };
+
+function parseMeta(dv, b, tags) {
+  let s = b.start; if (s + 8 <= b.end && cc(dv, s + 4) !== 'hdlr') s += 4;
+  const ch = kids(dv, s, b.end), keys = [];
+  const kb = ch.find(x => x.type === 'keys');
+  if (kb) {
+    const n = dv.getUint32(kb.start + 4); let p = kb.start + 8;
+    for (let i = 0; i < n && p + 8 <= kb.end; i++) { const len = dv.getUint32(p); if (len < 8 || p + len > kb.end) break; keys.push(U8.decode(new Uint8Array(dv.buffer, dv.byteOffset + p + 8, len - 8))); p += len; }
+  }
+  const il = ch.find(x => x.type === 'ilst'); if (!il) return;
+  for (const it of kids(dv, il.start, il.end)) {
+    const db = kids(dv, it.start, it.end).find(x => x.type === 'data'); if (!db || db.end - db.start < 8) continue;
+    const t = dv.getUint32(db.start) & 0xffffff, ps = db.start + 8, n = db.end - ps;
+    const raw = new Uint8Array(dv.buffer, dv.byteOffset + ps, n);
+    let v;
+    if (t === 1 || (t === 0 && n < 256 && raw.every(c => c >= 9))) v = U8.decode(raw);
+    else if (t === 23 && n === 4) v = dv.getFloat32(ps);
+    else if (t === 24 && n === 8) v = dv.getFloat64(ps);
+    else if ((t === 21 || t === 22 || t === 0) && (n === 1 || n === 2 || n === 4)) v = n === 1 ? dv.getUint8(ps) : n === 2 ? dv.getUint16(ps) : dv.getUint32(ps);
+    else v = 'binary data (' + n + ' bytes)';
+    const name = keys.length && it.num >= 1 && it.num <= keys.length ? keys[it.num - 1] : it.type;
+    tags[name] = v;
+  }
+}
+function parseUdta(dv, b, tags) {
+  for (const c of kids(dv, b.start, b.end)) {
+    if (c.type === 'meta') { parseMeta(dv, c, tags); continue; }
+    if (c.type.charCodeAt(0) !== 0xA9 || c.end - c.start < 4) continue;
+    if (c.end - c.start >= 16 && cc(dv, c.start + 4) === 'data') tags[c.type] = U8.decode(new Uint8Array(dv.buffer, dv.byteOffset + c.start + 16, c.end - c.start - 16));
+    else { const len = Math.min(dv.getUint16(c.start), c.end - c.start - 4); tags[c.type] = U8.decode(new Uint8Array(dv.buffer, dv.byteOffset + c.start + 4, len)); }
+  }
+}
+function parseTrak(dv, b) {
+  const t = {}, ch = kids(dv, b.start, b.end);
+  const tk = ch.find(x => x.type === 'tkhd');
+  if (tk) {
+    const v = dv.getUint8(tk.start), m = tk.start + (v === 1 ? 36 : 24) + 16;
+    if (m + 44 <= tk.end) {
+      t.rot = ((Math.round(Math.atan2(dv.getInt32(m + 4) / 65536, dv.getInt32(m) / 65536) * 180 / Math.PI) % 360) + 360) % 360;
+      t.w = dv.getUint32(m + 36) / 65536; t.h = dv.getUint32(m + 40) / 65536;
+    }
+  }
+  const md = ch.find(x => x.type === 'mdia'); if (!md) return t;
+  const mc = kids(dv, md.start, md.end);
+  const mh = mc.find(x => x.type === 'mdhd');
+  if (mh) { const v = dv.getUint8(mh.start); if (v === 1) { t.ts = dv.getUint32(mh.start + 20); t.dur = Number(dv.getBigUint64(mh.start + 24)); } else { t.ts = dv.getUint32(mh.start + 12); t.dur = dv.getUint32(mh.start + 16); } }
+  const hd = mc.find(x => x.type === 'hdlr'); if (hd) t.handler = cc(dv, hd.start + 8);
+  const mi = mc.find(x => x.type === 'minf'); const st = mi && kids(dv, mi.start, mi.end).find(x => x.type === 'stbl');
+  if (st) {
+    const sc = kids(dv, st.start, st.end);
+    const sd = sc.find(x => x.type === 'stsd');
+    if (sd && sd.start + 16 <= sd.end) {
+      const e = sd.start + 8; t.codec = cc(dv, e + 4);
+      if (t.handler === 'vide' && e + 36 <= sd.end) { t.cw = dv.getUint16(e + 32); t.chh = dv.getUint16(e + 34); }
+      if (t.handler === 'soun' && e + 36 <= sd.end) { t.channels = dv.getUint16(e + 24); t.rate = dv.getUint16(e + 32); }
+    }
+    const tt = sc.find(x => x.type === 'stts');
+    if (tt) { const n = Math.min(dv.getUint32(tt.start + 4), 200000); let tot = 0; for (let i = 0; i < n && tt.start + 16 + i * 8 <= tt.end; i++) tot += dv.getUint32(tt.start + 8 + i * 8); t.samples = tot; }
+  }
+  return t;
+}
+async function readContainer(file) {
+  const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const hs = L1.decode(head);
+  if (head[0] === 0x1A && head[1] === 0x45 && head[2] === 0xDF && head[3] === 0xA3) return { kind: 'WebM / Matroska' };
+  if (hs.slice(0, 4) === 'RIFF' && hs.slice(8, 12) === 'AVI ') return { kind: 'AVI' };
+  const info = { kind: null, tags: {}, tracks: [] };
+  let off = 0, guard = 0, sawBox = false;
+  while (off + 8 <= file.size && guard++ < 4000) {
+    const dv = new DataView(await file.slice(off, off + 16).arrayBuffer());
+    if (dv.byteLength < 8) break;
+    let len = dv.getUint32(0), hd = 8; const type = cc(dv, 4);
+    if (len === 1 && dv.byteLength >= 16) { len = Number(dv.getBigUint64(8)); hd = 16; } else if (len === 0) len = file.size - off;
+    if (len < hd || !/^[\w ©\-]{4}$/.test(type)) break;
+    sawBox = true;
+    if (type === 'ftyp') {
+      const f = new DataView(await file.slice(off + hd, off + Math.min(len, 128)).arrayBuffer());
+      if (f.byteLength >= 4) { info.brand = cc(f, 0).trim(); const cb = []; for (let p = 8; p + 4 <= f.byteLength; p += 4) cb.push(cc(f, p).trim()); info.brands = cb.filter(Boolean); }
+      info.kind = info.brand === 'qt' ? 'QuickTime (MOV)' : 'MP4';
+    }
+    if (type === 'moov') {
+      if (len > 96 * 1048576) { info.moovTooBig = true; break; }
+      const buf = await file.slice(off + hd, off + len).arrayBuffer(), mv = new DataView(buf);
+      for (const b of kids(mv, 0, mv.byteLength)) {
+        if (b.type === 'mvhd') {
+          const v = mv.getUint8(b.start);
+          if (v === 1) { info.created = qtDate(Number(mv.getBigUint64(b.start + 4))); info.modified = qtDate(Number(mv.getBigUint64(b.start + 12))); info.ts = mv.getUint32(b.start + 20); info.dur = Number(mv.getBigUint64(b.start + 24)); }
+          else { info.created = qtDate(mv.getUint32(b.start + 4)); info.modified = qtDate(mv.getUint32(b.start + 8)); info.ts = mv.getUint32(b.start + 12); info.dur = mv.getUint32(b.start + 16); }
+        } else if (b.type === 'trak') info.tracks.push(parseTrak(mv, b));
+        else if (b.type === 'udta') parseUdta(mv, b, info.tags);
+        else if (b.type === 'meta') parseMeta(mv, b, info.tags);
+      }
+      info.kind = info.kind || 'QuickTime (MOV)';
+      info.parsed = true;
+      break;
+    }
+    off += len;
+  }
+  if (!sawBox) return { kind: null };
+  return info;
+}
+function iso6709(s) {
+  const m = /([+-]\d+(?:\.\d+)?)([+-]\d+(?:\.\d+)?)([+-]\d+(?:\.\d+)?)?/.exec(String(s || ''));
+  return m ? { lat: +m[1], lon: +m[2], alt: m[3] != null ? +m[3] : null } : null;
+}
+async function readVideo(file, probe) {
+  let c = {}; try { c = await readContainer(file); } catch (e) { c = {}; }
+  const tags = c.tags || {}, facts = [], flags = [], groups = [];
+  const vt = (c.tracks || []).find(t => t.handler === 'vide'), at = (c.tracks || []).find(t => t.handler === 'soun');
+  const pick = (...names) => { for (const n of names) if (tags[n] != null && String(tags[n]).trim()) return String(tags[n]).trim(); return ''; };
+
+  const dur = c.dur && c.ts ? c.dur / c.ts : (probe && probe.duration) || 0;
+  let fps = vt && vt.samples && vt.dur && vt.ts ? vt.samples / (vt.dur / vt.ts) : 0;
+  const capFps = parseFloat(tags['com.android.capture.fps']);
+  if (fps > 0 && fps < 240) S.fps = fps;
+  S.hasAudio = c.parsed ? !!at : true;
+  let w = probe && probe.w, hh = probe && probe.h;
+  if (!w && vt) { w = vt.rot === 90 || vt.rot === 270 ? vt.h : vt.w; hh = vt.rot === 90 || vt.rot === 270 ? vt.w : vt.h; }
+
+  // when
+  const appleDate = pick('com.apple.quicktime.creationdate');
+  const ad = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})([+-]\d{2}:?\d{2}|Z)?/.exec(appleDate);
+  if (ad) facts.push({ k: 'Recorded', v: niceDate(new Date(+ad[1], +ad[2] - 1, +ad[3], +ad[4], +ad[5], +ad[6])) + (ad[7] ? '  (UTC' + ad[7] + ')' : ''), n: 'From the phone\'s clock when recording began, in the phone\'s own time zone.' });
+  else if (c.created) facts.push({ k: 'Recorded', v: niceUTC(c.created), n: 'Stored in UTC, the world standard time. Convert it to the witness\'s local time. It is only as right as the device clock.' });
+  else facts.push({ k: 'Recorded', v: 'Not recorded', n: 'The file carries no recording time. Use the witness account and ask for the original file.' });
+
+  // device
+  const make = pick('com.apple.quicktime.make', 'com.android.manufacturer', '©mak'), model = pick('com.apple.quicktime.model', 'com.android.model', '©mod');
+  const sw = pick('com.apple.quicktime.software', '©swr'), enc = pick('©too', 'encoder', '©enc');
+  if (make || model) {
+    facts.push({ k: 'Device', v: [make, model].filter(Boolean).join(' ') + (sw ? '\nSoftware ' + sw : ''), n: 'Look up this model to learn what its camera can and cannot resolve.' });
+    flags.push({ level: 'good', title: 'Camera identified: ' + [make, model].filter(Boolean).join(' '), text: 'The file still carries the device details a phone writes when it records. That is what an original file looks like.' });
+  }
+  // where
+  const loc = iso6709(pick('com.apple.quicktime.location.ISO6709', '©xyz'));
+  if (loc && isFinite(loc.lat) && isFinite(loc.lon)) {
+    facts.push({ k: 'Location', v: coord(loc.lat, loc.lon) + (loc.alt != null ? '\n' + Math.round(loc.alt) + ' m above sea level' : ''), n: 'Where the device believed it was when recording began.', link: mapLink(loc.lat, loc.lon), linkText: 'Open this spot on a map' });
+    flags.push({ level: 'good', title: 'Location recorded', text: 'Compare it with where the witness says they were standing.' });
+  } else if (c.parsed) facts.push({ k: 'Location', v: 'Not recorded', n: 'Location was switched off on the device, or it was removed when the file was shared.' });
+
+  // length / format
+  const lf = [];
+  if (dur) lf.push(clock(dur).replace(/\.\d+$/, '') + ' long');
+  if (fps) lf.push((+fps.toFixed(2)) + ' frames per second');
+  if (w && hh) lf.push(Math.round(w) + ' × ' + Math.round(hh) + ' px');
+  if (lf.length) facts.push({ k: 'Length and size', v: lf.join('  ·  '), n: fps ? 'Each frame covers about ' + Math.round(1000 / fps) + ' thousandths of a second. Use the frame buttons in the next stage to step through one at a time.' : 'Step through the video one frame at a time in the next stage.' });
+  const fm = [];
+  if (vt && vt.codec) fm.push((CODECS[vt.codec] || vt.codec) + ' video');
+  if (at && at.codec) fm.push((CODECS[at.codec] || at.codec) + ' sound');
+  if (c.kind) fm.push(c.kind + ' file');
+  const mbps = dur ? file.size * 8 / dur / 1e6 : 0;
+  if (fm.length) facts.push({ k: 'Format', v: fm.join('  ·  ') + (mbps ? '\n' + mbps.toFixed(1) + ' megabits per second' : ''), n: 'Megabits per second measures how much picture data was kept. Lower numbers mean heavier compression and blockier detail.' });
+
+  // flags
+  if (S.isSample) flags.push({ level: 'note', title: 'This is a practice file', text: 'It is not evidence.' });
+  if (!c.kind) flags.push({ level: 'note', title: 'Only basic details can be read from this file type', text: 'The lab reads full metadata from MP4 and MOV files, which is what phones record. You can still enhance this video if your browser can play it.' });
+  else if (!c.parsed) flags.push({ level: 'note', title: c.moovTooBig ? 'The file index is too large to read here' : 'Detailed metadata is read from MP4 and MOV files', text: 'This file is ' + c.kind + '. You can still enhance it if your browser can play it.' });
+  if (c.parsed && EDITORS.test(enc + ' ' + sw)) flags.push({ level: 'check', title: 'Re-encoded by software: ' + (EDITORS.test(enc) ? enc : sw), text: 'This is not the file the camera wrote. An editing app, a converter or a messaging service processed it afterward, which lowers quality and can remove original details. Ask for the original.' });
+  if (c.parsed && !c.created && !ad) flags.push({ level: 'check', title: 'No recording date in the file', text: 'Phones always stamp the date. A missing date usually means the video was converted, edited or passed through an app that strips it.' });
+  if (c.parsed && !make && !model) flags.push({ level: 'check', title: 'No camera information in this file', text: 'The device make and model are missing. That is common after social media, messaging apps and converters. Ask the witness to send the original straight from the device.' });
+  if (c.created && c.modified && Math.abs(c.modified - c.created) > 120000 + dur * 1000) flags.push({ level: 'note', title: 'Saved again after it was recorded', text: 'Created ' + niceUTC(c.created) + ', last written ' + niceUTC(c.modified) + '. Trimming or editing on the phone does this.' });
+  if (fps && fps < 20) flags.push({ level: 'note', title: 'Low frame rate: ' + (+fps.toFixed(1)) + ' per second', text: 'Phones slow down in the dark so each frame can gather more light. Moving lights blur and smear within every frame.' });
+  if (mbps && w && hh && mbps < (w * hh) / 1.5e6) flags.push({ level: 'note', title: 'Heavily compressed: ' + mbps.toFixed(1) + ' megabits per second', text: 'Much of the fine detail was thrown away to make the file small, as messaging and social apps do. Small lights can turn into blocks and smudges that are not real shapes.' });
+
+  if (c.kind) {
+    const rows = [{ k: 'Container', v: c.kind }];
+    if (c.brand) rows.push({ k: 'Brand', v: c.brand + (c.brands && c.brands.length ? '  (also: ' + c.brands.join(', ') + ')' : '') });
+    if (c.created) rows.push({ k: 'Created', v: niceUTC(c.created) });
+    if (c.modified) rows.push({ k: 'Modified', v: niceUTC(c.modified) });
+    if (dur) rows.push({ k: 'Duration', v: dur.toFixed(3) + ' s' });
+    groups.push({ name: 'File container', rows });
+  }
+  if (vt) groups.push({ name: 'Picture track', rows: [
+    vt.codec && { k: 'Codec', v: (CODECS[vt.codec] || vt.codec) + '  [' + vt.codec + ']' },
+    vt.cw && { k: 'Stored size', v: vt.cw + ' × ' + vt.chh + ' px' },
+    { k: 'Rotation', v: (vt.rot || 0) + '°' },
+    vt.samples && { k: 'Frames', v: String(vt.samples) },
+    fps && { k: 'Average frame rate', v: fps.toFixed(3) + ' per second' },
+    capFps && { k: 'Capture frame rate', v: String(capFps) }
+  ].filter(Boolean) });
+  if (at) groups.push({ name: 'Sound track', rows: [
+    at.codec && { k: 'Codec', v: (CODECS[at.codec] || at.codec) + '  [' + at.codec + ']' },
+    at.channels && { k: 'Channels', v: String(at.channels) },
+    at.rate && { k: 'Sample rate', v: at.rate + ' Hz' }
+  ].filter(Boolean) });
+  const tk = Object.keys(tags);
+  if (tk.length) groups.push({ name: 'Tags written by the device or software', rows: tk.map(k => ({ k, v: fmtVal(tags[k]), raw: true })) });
+  return { facts, flags, groups };
+}
+
+/* ---------- practice photo ---------- */
+function exifSegment() {
+  const u16 = v => [v >> 8 & 255, v & 255], u32 = v => [v >>> 24 & 255, v >>> 16 & 255, v >>> 8 & 255, v & 255];
+  const enc = (t, v) => t === 2 ? [...v].map(c => c.charCodeAt(0)).concat(0) : t === 3 ? v.flatMap(u16) : t === 4 ? v.flatMap(u32) : v.flatMap(([n, d]) => [...u32(n), ...u32(d)]);
+  function ifd(entries, base) {
+    const head = [...u16(entries.length)], data = [], ds = base + 2 + 12 * entries.length + 4;
+    for (const [tag, type, v] of entries) {
+      const b = enc(type, v), count = type === 2 ? b.length : v.length;
+      head.push(...u16(tag), ...u16(type), ...u32(count));
+      if (b.length <= 4) head.push(...b, ...Array(4 - b.length).fill(0));
+      else { head.push(...u32(ds + data.length)); data.push(...b); if (data.length % 2) data.push(0); }
+    }
+    head.push(0, 0, 0, 0);
+    return head.concat(data);
+  }
+  const i0 = (a, b) => [[0x010F, 2, 'Practice Camera'], [0x0110, 2, 'Sample Night Shot'], [0x0132, 2, '2026:03:14 21:42:10'], [0x8769, 4, [a]], [0x8825, 4, [b]]];
+  const ex = [[0x829A, 5, [[1, 4]]], [0x829D, 5, [[18, 10]]], [0x8827, 3, [3200]], [0x9003, 2, '2026:03:14 21:42:10'], [0x9011, 2, '-06:00'], [0x9209, 3, [0]], [0x920A, 5, [[68, 10]]], [0xA405, 3, [24]]];
+  const gp = [[0x0001, 2, 'N'], [0x0002, 5, [[33, 1], [23, 1], [3948, 100]]], [0x0003, 2, 'W'], [0x0004, 5, [[104, 1], [31, 1], [2280, 100]]], [0x0010, 2, 'T'], [0x0011, 5, [[2150, 10]]]];
+  const pEx = 8 + ifd(i0(0, 0), 8).length, exB = ifd(ex, pEx), pGp = pEx + exB.length, gpB = ifd(gp, pGp);
+  const body = [0x45, 0x78, 0x69, 0x66, 0, 0, 0x4D, 0x4D, 0, 0x2A, 0, 0, 0, 8, ...ifd(i0(pEx, pGp), 8), ...exB, ...gpB];
+  return new Uint8Array([0xFF, 0xE1, ...u16(body.length + 2), ...body]);
+}
+async function makeSample() {
+  const W = 1600, H = 1200, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d'); let seed = 7;
+  const r = () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#04060b'); g.addColorStop(.72, '#0a0f1d'); g.addColorStop(1, '#1d1a19');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 280; i++) { x.fillStyle = 'rgba(255,255,255,' + (.2 + r() * .65) + ')'; x.fillRect(r() * W, r() * H * .8, r() > .9 ? 2 : 1, 1); }
+  // faint structure behind the lights: hard to see until the shadows are lifted
+  x.fillStyle = 'rgba(128,138,160,0.075)';
+  x.beginPath(); x.ellipse(1000, 410, 190, 40, 0, 0, 6.2832); x.fill();
+  x.beginPath(); x.ellipse(1000, 384, 70, 34, 0, Math.PI, 6.2832); x.fill();
+  // one glaring light that hides three separate ones
+  const gl2 = x.createRadialGradient(1000, 430, 4, 1000, 430, 120);
+  gl2.addColorStop(0, 'rgba(236,224,188,1)'); gl2.addColorStop(.3, 'rgba(232,218,180,.96)'); gl2.addColorStop(.55, 'rgba(210,190,150,.4)'); gl2.addColorStop(1, 'rgba(200,180,140,0)');
+  x.fillStyle = gl2; x.beginPath(); x.arc(1000, 430, 120, 0, 6.2832); x.fill();
+  x.fillStyle = '#ffffff'; for (const dx of [-26, 0, 26]) { x.beginPath(); x.arc(1000 + dx, 430 + (dx ? 0 : -6), 7, 0, 6.2832); x.fill(); }
+  // tree line and a distant streetlight
+  x.fillStyle = '#020203'; x.beginPath(); x.moveTo(0, H); let y = H * .86;
+  for (let px = 0; px <= W; px += 14) { y += (r() - .5) * 26; y = Math.max(H * .8, Math.min(H * .92, y)); x.lineTo(px, y - (r() > .8 ? 30 * r() : 0)); }
+  x.lineTo(W, H); x.fill();
+  const sl = x.createRadialGradient(240, 985, 1, 240, 985, 46); sl.addColorStop(0, 'rgba(255,196,120,.95)'); sl.addColorStop(1, 'rgba(255,170,80,0)');
+  x.fillStyle = sl; x.beginPath(); x.arc(240, 985, 46, 0, 6.2832); x.fill();
+  const im = x.getImageData(0, 0, W, H), d = im.data;
+  for (let i = 0; i < d.length; i += 4) { const n = (r() - .5) * 9; d[i] += n; d[i + 1] += n; d[i + 2] += n * 1.2; }
+  x.putImageData(im, 0, 0);
+  const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', .9));
+  const b = new Uint8Array(await blob.arrayBuffer());
+  return new File([b.slice(0, 2), exifSegment(), b.slice(2)], 'practice-night-sky.jpg', { type: 'image/jpeg', lastModified: Date.now() });
+}
+
+/* ---------- intake ---------- */
+const video = $('#ufw-video');
+function sniffKind(file) {
+  if (/^video\//.test(file.type) || /\.(mp4|mov|m4v|webm|mkv|avi|3gp)$/i.test(file.name)) return 'video';
+  if (/^image\//.test(file.type) || /\.(jpe?g|png|heic|heif|webp|gif|tiff?|bmp|avif|dng)$/i.test(file.name)) return 'photo';
+  return null;
+}
+function resetAll() {
+  if (S.exporting) cancelVideoExport();
+  try { video.pause(); } catch (e) {}
+  if (S.url) URL.revokeObjectURL(S.url);
+  if (S.thumbUrl) URL.revokeObjectURL(S.thumbUrl);
+  video.removeAttribute('src'); try { video.load(); } catch (e) {}
+  benchReady = false; cancelAnimationFrame(raf); S.ready = null; $('#ufw-vready').hidden = true;
+  Object.assign(S, { file: null, kind: null, url: null, isSample: false, hash: null, hashNote: '', facts: [], flags: [], groups: [], thumbUrl: null, img: null, canEnhance: false, why: '', fps: 30, duration: 0, hasAudio: true, adj: Object.assign({}, DEF), look: 'original', zoom: 1, panX: 0, panY: 0, bypass: false });
+  $('#ufw-report').hidden = true; $('#ufw-report').replaceChildren();
+  $('#ufw-intake').hidden = false; $('#ufw-file').value = '';
+  $('#ufw-step2').disabled = true; $('#ufw-step3').disabled = true;
+  syncControls(); go(1);
+}
+async function handleFile(file, isSample) {
+  if (!file) return;
+  const kind = sniffKind(file);
+  if (!kind) { toast('That file is not a photo or a video. Choose a JPEG, PNG, HEIC, MP4 or MOV.'); return; }
+  resetAll();
+  S.file = file; S.kind = kind; S.isSample = !!isSample; S.url = URL.createObjectURL(file);
+  $('#ufw-intake').hidden = true; $('#ufw-busy').hidden = false;
+  let res;
+  try {
+    if (kind === 'photo') {
+      let dims = null;
+      try { const img = new Image(); img.src = S.url; await img.decode(); S.img = img; dims = { w: img.naturalWidth, h: img.naturalHeight }; S.canEnhance = true; }
+      catch (e) { S.canEnhance = false; S.why = 'This browser cannot display this kind of photo' + (/hei[cf]/i.test(file.name + file.type) ? ' (HEIC). Open the lab in Safari, or ask for a JPEG copy as well as the original.' : '. Try another browser.'); }
+      res = await readPhoto(file, dims);
+    } else {
+      const probe = await probeVideo();
+      res = await readVideo(file, probe);
+    }
+  } catch (e) {
+    res = { facts: [], flags: [{ level: 'check', title: 'The file could not be read', text: 'It may be damaged or incomplete. Ask the witness to send it again.' }], groups: [] };
+  }
+  if (S.file !== file) return;
+  S.facts = res.facts; S.flags = res.flags; S.groups = res.groups;
+  const order = { check: 0, note: 1, good: 2 };
+  S.flags.sort((a, b) => order[a.level] - order[b.level]);
+  $('#ufw-busy').hidden = true;
+  renderReport();
+  $('#ufw-step2').disabled = !S.canEnhance; $('#ufw-step3').disabled = false;
+  go(1);
+  fingerprint(file);
+}
+function probeVideo() {
+  return new Promise(resolve => {
+    let done = false;
+    const fin = ok => { if (done) return; done = true; video.removeEventListener('loadeddata', onOk); video.removeEventListener('error', onErr); clearTimeout(tm);
+      if (ok && video.videoWidth) { S.canEnhance = true; S.duration = isFinite(video.duration) ? video.duration : 0; resolve({ w: video.videoWidth, h: video.videoHeight, duration: S.duration }); }
+      else { S.canEnhance = false; S.why = 'This browser cannot play this video format. Try Safari or Edge, which play more phone formats, or ask for an MP4 copy as well as the original.'; resolve(null); } };
+    const onOk = () => fin(true), onErr = () => fin(false);
+    const tm = setTimeout(() => fin(video.readyState >= 2), 12000);
+    video.addEventListener('loadeddata', onOk); video.addEventListener('error', onErr);
+    video.muted = true; video.src = S.url; video.load();
+    const p = video.play(); if (p && p.then) p.then(() => { video.pause(); video.currentTime = 0; }).catch(() => {});
+  }).then(r => { video.muted = false; return r; });
+}
+async function fingerprint(file) {
+  const box = $('#ufw-hash'); if (!box) return;
+  if (!(window.crypto && crypto.subtle)) { S.hashNote = 'not available in this browser'; box.textContent = 'Not available in this browser.'; return; }
+  if (file.size > 300 * 1048576) { S.hashNote = 'skipped, file over 300 MB'; box.textContent = 'Skipped: the file is over 300 MB, which is too large to fingerprint in a browser.'; return; }
+  try {
+    const dg = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+    if (S.file !== file) return;
+    S.hash = [...new Uint8Array(dg)].map(b => pad(b.toString(16))).join('');
+    const b2 = $('#ufw-hash'); if (b2) b2.textContent = S.hash;
+    const cp = $('#ufw-copyhash'); if (cp) cp.hidden = false;
+  } catch (e) { S.hashNote = 'could not be calculated'; box.textContent = 'Could not be calculated for this file.'; }
+}
+
+/* ---------- stage 1 report ---------- */
+const LEVEL_WORD = { check: 'Check', note: 'Note', good: 'Good sign' };
+function renderReport() {
+  const R = $('#ufw-report'); R.replaceChildren();
+  const f = S.file, n = { check: 0, note: 0, good: 0 }; S.flags.forEach(x => n[x.level]++);
+  R.append(
+    h('div', { class: 'stagehead' }, h('h2', null, 'What the file says about itself'),
+      h('p', { class: 'sub' }, 'Read the highlights first. The full list is at the bottom for the case file.')),
+    h('div', { class: 'card filebar' },
+      h('div', null, h('div', { class: 'fname' }, f.name), h('div', { class: 'fsub' }, (S.kind === 'photo' ? 'Photo' : 'Video') + '  ·  ' + bytes(f.size) + (f.type ? '  ·  ' + f.type : ''))),
+      h('div', { class: 'row' },
+        S.canEnhance ? h('button', { type: 'button', class: 'btn primary', onclick: () => go(2) }, 'Next: Enhance') : h('button', { type: 'button', class: 'btn primary', onclick: () => go(3) }, 'Next: Download notes'),
+        h('button', { type: 'button', class: 'btn', onclick: resetAll }, 'Use a different file')))
+  );
+  if (!S.canEnhance && S.why) R.append(h('div', { class: 'warn' }, h('b', null, 'This file cannot be enhanced here. '), S.why, ' The metadata below was still read.'));
+  if (S.flags.length) {
+    R.append(h('div', { class: 'stack', style: 'gap:10px' },
+      h('div', { class: 'row', style: 'justify-content:space-between' }, h('h3', null, 'What stands out'),
+        h('div', { class: 'tally' }, n.check ? h('span', { class: 'pill check' }, n.check + ' to check') : null, n.note ? h('span', { class: 'pill note' }, n.note + (n.note === 1 ? ' note' : ' notes')) : null, n.good ? h('span', { class: 'pill good' }, n.good + (n.good === 1 ? ' good sign' : ' good signs')) : null)),
+      h('ul', { class: 'flags' }, S.flags.map(x => h('li', { class: 'flag ' + x.level }, h('span', { class: 'pill ' + x.level }, LEVEL_WORD[x.level]), h('span', { class: 'ft' }, x.title), h('span', { class: 'fx' }, x.text))))));
+  }
+  if (S.facts.length) {
+    R.append(h('div', { class: 'stack', style: 'gap:10px' }, h('h3', null, 'Key facts'),
+      h('div', { class: 'facts' }, S.facts.map(x => h('div', { class: 'card fact' }, h('div', { class: 'k' }, x.k),
+        h('div', { class: 'v' }, String(x.v).split('\n').flatMap((ln, i) => i ? [h('br'), ln] : [ln])),
+        h('div', { class: 'n' }, x.n), x.link ? h('a', { href: x.link, target: '_blank', rel: 'noopener' }, x.linkText) : null)))));
+  }
+  R.append(h('div', { class: 'card stack finger', style: 'gap:8px' }, h('h3', null, 'File fingerprint'),
+    h('div', { class: 'hash', id: 'ufw-hash' }, 'Calculating…'),
+    h('p', { class: 'hint' }, 'A code (SHA-256) worked out from every byte of this exact file. Record it in the case file. If the file is ever changed, even by one pixel, the code will no longer match, which proves whether a copy is the original.'),
+    h('div', { class: 'row' }, h('button', { type: 'button', class: 'btn small', id: 'ufw-copyhash', hidden: true, onclick: () => { try { navigator.clipboard.writeText(S.hash).then(() => toast('Fingerprint copied.'), () => toast('Copy was blocked. Select the code and copy it by hand.')); } catch (e) { toast('Copy was blocked. Select the code and copy it by hand.'); } } }, 'Copy fingerprint')),
+    h('p', { class: 'hint' }, 'Last saved on this device: ' + niceDate(new Date(f.lastModified)) + '. This is your copy\'s date, not the moment of capture.')));
+  if (S.thumbUrl && S.kind === 'photo' && S.canEnhance) {
+    R.append(h('div', { class: 'card stack', style: 'gap:10px' }, h('h3', null, 'Built-in preview check'),
+      h('div', { class: 'thumbs' },
+        h('figure', null, h('img', { src: S.thumbUrl, alt: 'Preview stored inside the file' }), h('figcaption', null, 'Preview stored by the camera')),
+        h('figure', null, h('img', { src: S.url, alt: 'The main picture' }), h('figcaption', null, 'The main picture'))),
+      h('p', { class: 'hint' }, 'Cameras tuck a small preview inside each photo. Many editors change the main picture and forget the preview. The two should show the same scene.')));
+  }
+  if (S.groups.length) {
+    R.append(h('div', { class: 'stack', style: 'gap:8px' }, h('h3', null, 'Everything in the file'),
+      S.groups.map(g => h('details', { class: 'grp' }, h('summary', null, h('span', null, g.name), h('span', { class: 'cnt' }, g.rows.length + (g.rows.length === 1 ? ' item' : ' items'))),
+        h('div', { class: 'kv' }, g.rows.flatMap(r => [
+          h('div', { class: 'kk' }, r.raw ? r.k : humanKey(r.k), GLOSS[r.k] ? h('small', null, GLOSS[r.k]) : null),
+          h('div', { class: 'vv' }, r.v)]))))));
+  } else {
+    R.append(h('div', { class: 'card' }, h('p', { class: 'hint' }, 'No embedded metadata was found in this file.')));
+  }
+  R.append(h('div', { class: 'row' },
+    S.canEnhance ? h('button', { type: 'button', class: 'btn primary', onclick: () => go(2) }, 'Next: Enhance') : null,
+    h('button', { type: 'button', class: 'btn', onclick: saveNotes }, 'Download analysis notes')));
+  R.hidden = false;
+}
+
+/* ---------- WebGL picture pipeline ---------- */
+const glc = $('#ufw-canvas'); let gl = null, U = {}, tex = null, texW = 2, texH = 2;
+const VS = 'attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
+const FS = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 v; uniform sampler2D T; uniform vec2 px1, px;
+uniform float uBright,uContrast,uExposure,uGamma,uSat,uSharp,uFxAmt,uInvert,uBypass; uniform int uFx,uChan;
+float L(vec3 c){return dot(c,vec3(.2126,.7152,.0722));}
+float S(float x,float y){return L(texture2D(T,v+vec2(x,y)*px).rgb);}
+void main(){
+  vec3 c=texture2D(T,v).rgb;
+  if(uBypass>.5){gl_FragColor=vec4(c,1.);return;}
+  if(uFx==0){
+    if(uSharp>0.){vec3 n=texture2D(T,v+vec2(px1.x,0.)).rgb+texture2D(T,v-vec2(px1.x,0.)).rgb+texture2D(T,v+vec2(0.,px1.y)).rgb+texture2D(T,v-vec2(0.,px1.y)).rgb;c=c+(c-n*.25)*uSharp;}
+  }else{
+    float tl=S(-1.,1.),t=S(0.,1.),tr=S(1.,1.),l=S(-1.,0.),r=S(1.,0.),bl=S(-1.,-1.),b=S(0.,-1.),br=S(1.,-1.);
+    if(uFx==1){c=vec3(.5+((r+b+br)-(tl+t+l))*uFxAmt);}
+    else{float gx=(tr+2.*r+br)-(tl+2.*l+bl);float gy=(tl+2.*t+tr)-(bl+2.*b+br);c=vec3(length(vec2(gx,gy))*uFxAmt);}
+  }
+  c*=uExposure; c+=uBright; c=(c-.5)*uContrast+.5; c=clamp(c,0.,1.);
+  c=pow(c,vec3(1./uGamma));
+  c=mix(vec3(L(c)),c,uSat);
+  if(uChan==1)c=vec3(c.r);else if(uChan==2)c=vec3(c.g);else if(uChan==3)c=vec3(c.b);
+  c=mix(c,1.-c,uInvert);
+  gl_FragColor=vec4(clamp(c,0.,1.),1.);
+}`;
+function initGL() {
+  if (gl) return true;
+  const opt = { preserveDrawingBuffer: true, alpha: false, antialias: false, premultipliedAlpha: false };
+  gl = glc.getContext('webgl', opt) || glc.getContext('experimental-webgl', opt);
+  if (!gl) return false;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+  try {
+    const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr);
+    if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error('link');
+    gl.useProgram(pr);
+    const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    for (const n of ['T', 'px1', 'px', 'uBright', 'uContrast', 'uExposure', 'uGamma', 'uSat', 'uSharp', 'uFxAmt', 'uInvert', 'uBypass', 'uFx', 'uChan']) U[n] = gl.getUniformLocation(pr, n);
+    tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  } catch (e) { gl = null; return false; }
+  return true;
+}
+function upload(src, w, h) {
+  texW = w; texH = h;
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, src); } catch (e) {}
+}
+function draw() {
+  if (!gl) return;
+  const a = S.adj;
+  gl.viewport(0, 0, glc.width, glc.height);
+  gl.uniform1i(U.T, 0);
+  gl.uniform2f(U.px1, 1 / texW, 1 / texH);
+  gl.uniform2f(U.px, a.fxSize / texW, a.fxSize / texH);
+  gl.uniform1f(U.uBright, a.brightness / 100 * .5);
+  gl.uniform1f(U.uContrast, a.contrast >= 0 ? 1 + a.contrast / 100 * 2 : 1 + a.contrast / 100);
+  gl.uniform1f(U.uExposure, Math.pow(2, a.exposure / 100 * 3));
+  gl.uniform1f(U.uGamma, Math.pow(2, a.shadows / 100 * 1.6));
+  gl.uniform1f(U.uSat, a.saturation >= 0 ? 1 + a.saturation / 100 * 2 : 1 + a.saturation / 100);
+  gl.uniform1f(U.uSharp, a.sharpen / 100 * 3);
+  gl.uniform1f(U.uFxAmt, .5 * Math.pow(16, a.fxAmt / 100));
+  gl.uniform1f(U.uInvert, a.invert ? 1 : 0);
+  gl.uniform1f(U.uBypass, S.bypass ? 1 : 0);
+  gl.uniform1i(U.uFx, a.fx === 'emboss' ? 1 : a.fx === 'edges' ? 2 : 0);
+  gl.uniform1i(U.uChan, { all: 0, red: 1, green: 2, blue: 3 }[a.chan] || 0);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+let benchReady = false, raf = 0, frameDirty = true;
+function prepareBench() {
+  if (benchReady || !S.canEnhance) return benchReady;
+  if (!initGL()) { S.canEnhance = false; S.why = 'This browser has its graphics features switched off, so the enhancement tools cannot run. Try another browser.'; toast(S.why); return false; }
+  if (S.kind === 'photo') {
+    const W = S.img.naturalWidth, H = S.img.naturalHeight; S.origW = W; S.origH = H;
+    const maxSide = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE) || 4096, 8192);
+    const k = Math.min(1, maxSide / Math.max(W, H), Math.sqrt(16e6 / (W * H)));
+    S.W = Math.max(1, Math.round(W * k)); S.H = Math.max(1, Math.round(H * k)); S.scaled = k < 1;
+    const c = document.createElement('canvas'); c.width = S.W; c.height = S.H;
+    const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(S.img, 0, 0, S.W, S.H);
+    glc.width = S.W; glc.height = S.H; upload(c, S.W, S.H); c.width = c.height = 0;
+    DEF.fxSize = S.adj.fxSize = Math.max(1, Math.min(6, Math.round(Math.max(S.W, S.H) / 1100)));
+  } else {
+    S.W = S.origW = video.videoWidth; S.H = S.origH = video.videoHeight; S.scaled = false;
+    glc.width = S.W; glc.height = S.H;
+    DEF.fxSize = S.adj.fxSize = Math.max(1, Math.min(6, Math.round(Math.max(S.W, S.H) / 1100)));
+    frameDirty = true; cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+  }
+  benchReady = true; syncControls();
+  return true;
+}
+function tick() {
+  if (S.kind !== 'video' || !benchReady) return;
+  if (video.readyState >= 2 && (!video.paused || frameDirty || video.seeking)) { upload(video, video.videoWidth, video.videoHeight); frameDirty = false; draw(); }
+  updateTransport();
+  raf = requestAnimationFrame(tick);
+}
+function redraw() { if (!benchReady) return; if (S.kind === 'video') { if (video.paused) draw(); } else draw(); }
+
+/* ---------- viewer: fit, zoom, pan ---------- */
+const view = $('#ufw-view');
+function layoutView() {
+  if (!S.W) return;
+  const cw = view.clientWidth || 300, wide = window.innerWidth >= 920;
+  const maxH = Math.max(180, Math.round(window.innerHeight * (wide ? .7 : .42)));
+  const ch = Math.min(maxH, Math.round(cw * S.H / S.W));
+  view.style.height = ch + 'px';
+  S.fit = Math.min(cw / S.W, ch / S.H);
+  const dw = S.W * S.fit, dh = S.H * S.fit;
+  glc.style.width = dw + 'px'; glc.style.height = dh + 'px';
+  glc.style.marginLeft = (-dw / 2) + 'px'; glc.style.marginTop = (-dh / 2) + 'px';
+  applyView();
+}
+function applyView() {
+  const cw = view.clientWidth, ch = view.clientHeight, dw = S.W * S.fit * S.zoom, dh = S.H * S.fit * S.zoom;
+  const mx = Math.max(0, (dw - cw) / 2), my = Math.max(0, (dh - ch) / 2);
+  S.panX = Math.max(-mx, Math.min(mx, S.panX)); S.panY = Math.max(-my, Math.min(my, S.panY));
+  glc.style.transform = 'translate(' + S.panX + 'px,' + S.panY + 'px) scale(' + S.zoom + ')';
+  glc.style.imageRendering = S.fit * S.zoom * (window.devicePixelRatio || 1) > 2.5 ? 'pixelated' : 'auto';
+  view.classList.toggle('zoomed', S.zoom > 1.001);
+  $('#ufw-zval').textContent = Math.round(S.zoom * 100) + '%';
+  $('#ufw-cropopt').hidden = !(S.zoom > 1.001);
+  if (!(S.zoom > 1.001)) $('#ufw-crop').checked = false;
+}
+function zoomTo(z, fx, fy) {
+  z = Math.max(1, Math.min(16, z)); fx = fx || 0; fy = fy || 0;
+  const k = z / S.zoom;
+  S.panX = fx - (fx - S.panX) * k; S.panY = fy - (fy - S.panY) * k; S.zoom = z;
+  if (z === 1) { S.panX = S.panY = 0; }
+  applyView();
+}
+$('#ufw-zin').addEventListener('click', () => zoomTo(S.zoom * 1.5));
+$('#ufw-zout').addEventListener('click', () => zoomTo(S.zoom / 1.5));
+$('#ufw-zfit').addEventListener('click', () => zoomTo(1));
+const ptrs = new Map(); let pinch = null;
+view.addEventListener('pointerdown', e => {
+  if (!(S.zoom > 1.001)) return;
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); try { view.setPointerCapture(e.pointerId); } catch (x) {}
+  view.classList.add('drag');
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: S.zoom }; }
+});
+view.addEventListener('pointermove', e => {
+  const p = ptrs.get(e.pointerId); if (!p) return;
+  if (ptrs.size === 1) { S.panX += e.clientX - p.x; S.panY += e.clientY - p.y; applyView(); }
+  p.x = e.clientX; p.y = e.clientY;
+  if (ptrs.size === 2 && pinch) { const [a, b] = [...ptrs.values()]; zoomTo(Math.max(1.01, pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d)); }
+});
+const endPtr = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (!ptrs.size) view.classList.remove('drag'); };
+view.addEventListener('pointerup', endPtr); view.addEventListener('pointercancel', endPtr);
+view.addEventListener('dblclick', e => {
+  const r = view.getBoundingClientRect();
+  if (S.zoom > 1.001) zoomTo(1); else zoomTo(3, e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2);
+});
+if (window.ResizeObserver) new ResizeObserver(() => { if (!$('#ufw-bench').hidden) layoutView(); }).observe(view);
+window.addEventListener('resize', () => { if (!$('#ufw-bench').hidden) layoutView(); });
+
+// compare with original
+const cmp = $('#ufw-cmp');
+function setBypass(on) { S.bypass = on; cmp.setAttribute('aria-pressed', on ? 'true' : 'false'); $('#ufw-tag').hidden = !on; redraw(); }
+cmp.addEventListener('pointerdown', e => { e.preventDefault(); setBypass(true); });
+['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach(ev => cmp.addEventListener(ev, () => { if (S.bypass) setBypass(false); }));
+cmp.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); setBypass(true); } });
+cmp.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') setBypass(false); });
+cmp.addEventListener('contextmenu', e => e.preventDefault());
+
+/* ---------- video transport ---------- */
+const seek = $('#ufw-seek'); let seeking = false;
+function updateTransport() {
+  const d = video.duration && isFinite(video.duration) ? video.duration : S.duration;
+  if (!seeking && d) seek.value = Math.round(video.currentTime / d * 1000);
+  $('#ufw-time').textContent = clock(video.currentTime) + ' / ' + clock(d);
+  const pb = $('#ufw-play'), lbl = video.paused ? 'Play' : 'Pause';
+  if (pb.textContent !== lbl) { pb.textContent = lbl; pb.setAttribute('aria-label', lbl); }
+  if (S.exporting && d) { $('#ufw-prog').firstElementChild.style.width = Math.min(100, video.currentTime / d * 100) + '%'; }
+}
+$('#ufw-play').addEventListener('click', () => { if (S.exporting) return; if (video.paused) { video.playbackRate = +$('#ufw-speed').value; const p = video.play(); if (p && p.catch) p.catch(() => {}); } else video.pause(); });
+function stepFrame(dir) { if (S.exporting) return; video.pause(); const d = video.duration || 0; video.currentTime = Math.max(0, Math.min(d ? d - .001 : 1e9, video.currentTime + dir / (S.fps || 30))); }
+$('#ufw-fb').addEventListener('click', () => stepFrame(-1));
+$('#ufw-ff').addEventListener('click', () => stepFrame(1));
+seek.addEventListener('input', () => { if (S.exporting) return; seeking = true; const d = video.duration || 0; if (d) video.currentTime = seek.value / 1000 * d; });
+seek.addEventListener('change', () => { seeking = false; });
+$('#ufw-speed').addEventListener('change', e => { video.playbackRate = +e.target.value; });
+$('#ufw-mute').addEventListener('click', e => { video.muted = !video.muted; e.currentTarget.setAttribute('aria-pressed', video.muted ? 'true' : 'false'); });
+video.addEventListener('seeked', () => { frameDirty = true; });
+video.addEventListener('loadeddata', () => { frameDirty = true; });
+
+/* ---------- stage 2 controls ---------- */
+const LOOKS = [
+  { id: 'original', name: 'Original', set: {}, what: 'The file exactly as it was given to you, with no changes.', look: 'Start here. Note what you can see before you change anything, so you know what the enhancement added.' },
+  { id: 'shadows', name: 'Brighten the dark', set: { shadows: 70, brightness: 4 }, what: 'Lifts the dark parts of the picture and leaves the bright lights alone.', look: 'A dark body behind or between lights, a horizon or tree line, wires, poles and rooftops that explain where lights are sitting.' },
+  { id: 'glare', name: 'Tame bright lights', set: { exposure: -55, contrast: 35 }, what: 'Darkens the whole picture so glaring lights stop washing out.', look: 'Whether one bright blob is really several separate lights, and what shape and color the light source has.' },
+  { id: 'contrast', name: 'Boost contrast', set: { contrast: 55, shadows: 15 }, what: 'Pushes light and dark further apart.', look: 'A faint or hazy object pulling away from the sky behind it. Useful for daytime shots of pale objects.' },
+  { id: 'emboss', name: 'Emboss', set: { fx: 'emboss', fxAmt: 55 }, what: 'Redraws the picture as a gray raised surface, lit from one corner. Flat areas go smooth and every change in brightness becomes a ridge.', look: 'The outline and surface of an object, hidden shapes in flat-looking sky, and square blocks or a too-clean outline that suggest compression or pasting.' },
+  { id: 'edges', name: 'Find edges', set: { fx: 'edges', fxAmt: 50 }, what: 'Keeps only the outlines and turns everything else black.', look: 'An object whose outline is much crisper than the rest of the scene. In a real photo, things at similar distances are similarly sharp.' },
+  { id: 'negative', name: 'Negative', set: { invert: true }, what: 'Swaps light for dark, like a film negative.', look: 'Dark objects against a bright sky, and faint detail inside bright areas. Eyes pick out dim detail more easily on a light background.' },
+  { id: 'red', name: 'Cut through haze', set: { chan: 'red', contrast: 25 }, what: 'Shows only the red light the camera recorded, in black and white.', look: 'Distant objects in daytime sky. Haze scatters blue light the most, so the red part of the picture is usually the clearest.' }
+];
+const CTLS = [
+  { group: 'Light', items: [
+    { id: 'shadows', label: 'Shadows', min: -100, max: 100, hint: 'Lifts or deepens the dark areas and leaves bright lights alone. The best first move on a night shot.' },
+    { id: 'exposure', label: 'Exposure', min: -100, max: 100, hint: 'Like letting more or less light into the camera. Turn it down to see the shape inside a glaring light.' },
+    { id: 'brightness', label: 'Brightness', min: -100, max: 100, hint: 'Makes everything lighter or darker by the same amount.' },
+    { id: 'contrast', label: 'Contrast', min: -100, max: 100, hint: 'Pushes lights and darks apart so a faint object separates from the sky.' } ] },
+  { group: 'Color', items: [
+    { id: 'saturation', label: 'Color strength', min: -100, max: 100, hint: 'Turn up to tell red, green and white aircraft lights apart. All the way down gives black and white.' },
+    { id: 'chan', label: 'Color channel', seg: [['all', 'All'], ['red', 'Red'], ['green', 'Green'], ['blue', 'Blue']], hint: 'A camera records red, green and blue separately. Viewing one at a time can show an object that the others hide.' },
+    { id: 'invert', label: 'Negative', seg: [[false, 'Off'], [true, 'On']], hint: 'Swaps light and dark.' } ] },
+  { group: 'Detail', items: [
+    { id: 'sharpen', label: 'Sharpen', min: 0, max: 100, hint: 'Crisps edges. It cannot add detail the camera never captured, and it makes grain stand out.' },
+    { id: 'fx', label: 'Effect', seg: [['none', 'None'], ['emboss', 'Emboss'], ['edges', 'Edges']], hint: 'Emboss shows the picture as a raised gray surface. Edges keeps only the outlines.' },
+    { id: 'fxAmt', label: 'Effect strength', min: 0, max: 100, hint: 'How strongly small changes in brightness show up.', fxOnly: true },
+    { id: 'fxSize', label: 'Effect detail size', min: 1, max: 8, hint: 'Low picks out fine grain. High picks out larger shapes.', fxOnly: true } ] }
+];
+function buildControls() {
+  const box = $('#ufw-controls');
+  for (const g of CTLS) {
+    const fs = h('fieldset', null, h('legend', null, g.group));
+    for (const c of g.items) {
+      const id = 'ufw-c-' + c.id;
+      if (c.seg) {
+        fs.append(h('div', { class: 'ctl', 'data-ctl': c.id }, h('span', { style: 'font-weight:700', id: id + '-l' }, c.label), h('span'),
+          h('div', { class: 'seg', role: 'group', 'aria-labelledby': id + '-l' }, c.seg.map(([v, t]) => h('button', { type: 'button', 'data-v': String(v), 'aria-pressed': 'false', onclick: () => { S.adj[c.id] = v; S.look = 'custom'; syncControls(); redraw(); } }, t))),
+          h('p', { class: 'hint' }, c.hint)));
+      } else {
+        fs.append(h('div', { class: 'ctl', 'data-ctl': c.id, 'data-fx': c.fxOnly ? '1' : null }, h('label', { for: id }, c.label), h('output', { id: id + '-o', for: id }, '0'),
+          h('input', { type: 'range', id, min: c.min, max: c.max, step: 1, value: 0, oninput: e => { S.adj[c.id] = +e.target.value; S.look = 'custom'; syncControls(true); redraw(); }, ondblclick: () => { S.adj[c.id] = DEF[c.id]; syncControls(); redraw(); } }),
+          h('p', { class: 'hint' }, c.hint)));
+      }
+    }
+    box.append(fs);
+  }
+  const lk = $('#ufw-looks');
+  for (const l of LOOKS) lk.append(h('button', { type: 'button', class: 'look', 'data-look': l.id, 'aria-pressed': 'false', onclick: () => { S.adj = Object.assign({}, DEF, l.set); S.look = l.id; syncControls(); redraw(); } }, l.name));
+}
+function syncControls(light) {
+  const a = S.adj;
+  for (const g of CTLS) for (const c of g.items) {
+    const row = root.querySelector('[data-ctl="' + c.id + '"]'); if (!row) continue;
+    if (c.seg) row.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === String(a[c.id]) ? 'true' : 'false'));
+    else {
+      const inp = row.querySelector('input'); if (!light) inp.value = a[c.id];
+      row.querySelector('output').textContent = c.min < 0 && a[c.id] > 0 ? '+' + a[c.id] : String(a[c.id]).replace('-', '−');
+      if (c.fxOnly) row.hidden = a.fx === 'none';
+      if (c.id === 'sharpen') row.hidden = a.fx !== 'none';
+    }
+  }
+  root.querySelectorAll('.look').forEach(b => b.setAttribute('aria-pressed', b.dataset.look === S.look ? 'true' : 'false'));
+  const ex = $('#ufw-explain'), l = LOOKS.find(x => x.id === S.look);
+  if (l) ex.replaceChildren(h('div', { class: 'et' }, l.name), h('p', null, h('b', null, 'What it does: '), l.what), h('p', null, h('b', null, 'What to look for: '), l.look));
+  else ex.replaceChildren(h('div', { class: 'et' }, 'Your own settings'), h('p', null, 'You have moved away from the ready-made looks. Each control below says what it does. Press and hold "Hold for original" at any time to check a detail was in the file to begin with.'));
+  if (S.stage === 3) renderChanges();
+}
+$('#ufw-reset').addEventListener('click', () => { S.adj = Object.assign({}, DEF); S.look = 'original'; syncControls(); redraw(); });
+
+function changeList() {
+  const a = S.adj, out = [], sg = v => (v > 0 ? '+' : '−') + Math.abs(v);
+  for (const k of ['shadows', 'exposure', 'brightness', 'contrast']) if (a[k]) out.push(k[0].toUpperCase() + k.slice(1) + ' ' + sg(a[k]));
+  if (a.saturation) out.push('Color strength ' + sg(a.saturation));
+  if (a.chan !== 'all') out.push('Color channel: ' + a.chan + ' only');
+  if (a.fx === 'none' && a.sharpen) out.push('Sharpen ' + a.sharpen);
+  if (a.fx !== 'none') out.push('Effect: ' + (a.fx === 'emboss' ? 'emboss' : 'edges') + ', strength ' + a.fxAmt + ', detail size ' + a.fxSize);
+  if (a.invert) out.push('Negative');
+  return out;
+}
+function renderChanges() {
+  const list = changeList(), ul = $('#ufw-changes');
+  ul.replaceChildren(...(list.length ? list : ['No changes. This copy matches the original picture.']).map(t => h('li', null, t)));
+}
+
+/* ---------- stage switching ---------- */
+function go(n) {
+  if (n > 1 && !S.file) return;
+  if (n === 2 && !S.canEnhance) n = 3;
+  if (n >= 2 && S.canEnhance && !prepareBench()) n = 3;
+  if (n !== 3 && S.exporting) cancelVideoExport();
+  S.stage = n;
+  if (n !== 3) { S.ready = null; $('#ufw-vready').hidden = true; }
+  $('#ufw-st1').hidden = n !== 1; $('#ufw-bench').hidden = n === 1;
+  $('#ufw-p2').hidden = n !== 2; $('#ufw-p3').hidden = n !== 3;
+  [1, 2, 3].forEach(i => { const b = $('#ufw-step' + i); if (i === n) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); b.classList.toggle('done', !!S.file && i < n); });
+  if (n >= 2) {
+    const isV = S.kind === 'video', ok = S.canEnhance;
+    $('#ufw-viewer').hidden = !ok; $('#ufw-transport').hidden = !isV || !ok;
+    $('#ufw-h2').textContent = n === 2 ? 'Enhance' : 'Download';
+    $('#ufw-sub2').textContent = n === 2
+      ? (isV ? 'Play, pause and step through the video, then change how it looks. Your changes apply to every frame. The original file is never altered.' : 'Change how the picture looks to bring out what is hard to see. The original file is never altered.') + (S.scaled ? ' This photo is very large, so the lab works on a ' + S.W + ' × ' + S.H + ' copy.' : '')
+      : 'Save your working copy and a written record of what you did.';
+    $('#ufw-dlphoto').hidden = !ok; $('#ufw-dlvideo').hidden = !ok || !isV;
+    $('#ufw-dlh').textContent = isV ? 'This frame as a picture' : 'Enhanced photo';
+    $('#ufw-savephoto').textContent = isV ? 'Download this frame' : 'Download enhanced photo';
+    $('#ufw-back2').hidden = !ok;
+    if (isV && n === 3) $('#ufw-vnote').textContent = recMime() ? 'Saves as ' + (/mp4/.test(recMime()) ? 'MP4' : 'WebM') + (S.duration ? '. This video will take about ' + clock(S.duration).replace(/\.\d+$/, '') + ' to record.' : '.') : 'This browser cannot record video. You can still save single frames above. Chrome, Edge, Firefox and Safari can all record.';
+    if (isV) $('#ufw-savevideo').disabled = !recMime();
+    if (n === 3) renderChanges();
+    if (ok) { layoutView(); if (S.kind === 'photo') draw(); else frameDirty = true; }
+  } else { try { video.pause(); } catch (e) {} }
+  if (n !== 1 || S.file) { const top = root.querySelector('.steps'); try { top.scrollIntoView({ block: 'start' }); } catch (e) {} }
+}
+$('#ufw-step1').addEventListener('click', () => go(1));
+$('#ufw-step2').addEventListener('click', () => go(2));
+$('#ufw-step3').addEventListener('click', () => go(3));
+$('#ufw-to3').addEventListener('click', () => go(3));
+$('#ufw-back1').addEventListener('click', () => go(1));
+$('#ufw-back2').addEventListener('click', () => go(2));
+$('#ufw-new').addEventListener('click', resetAll);
+
+/* ---------- stage 3: exports ---------- */
+$('#ufw-fmt').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.fmt = b.dataset.v; $('#ufw-fmt').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); });
+function composeStill() {
+  if (S.kind === 'video' && video.readyState >= 2) upload(video, video.videoWidth, video.videoHeight);
+  draw();
+  let sx = 0, sy = 0, sw = glc.width, sh = glc.height;
+  if ($('#ufw-crop').checked && S.zoom > 1.001) {
+    const k = S.fit * S.zoom * (S.W / glc.width);
+    sw = Math.min(glc.width, Math.round(view.clientWidth / k)); sh = Math.min(glc.height, Math.round(view.clientHeight / k));
+    sx = Math.round(Math.max(0, Math.min(glc.width - sw, glc.width / 2 - S.panX / k - sw / 2)));
+    sy = Math.round(Math.max(0, Math.min(glc.height - sh, glc.height / 2 - S.panY / k - sh / 2)));
+  }
+  const label = $('#ufw-label').checked, fs = Math.max(11, Math.round(sw / 85)), strip = label ? Math.round(fs * 3.4) : 0;
+  const c = document.createElement('canvas'); c.width = sw; c.height = sh + strip;
+  const x = c.getContext('2d'); x.drawImage(glc, sx, sy, sw, sh, 0, 0, sw, sh);
+  if (label) {
+    x.fillStyle = '#10141d'; x.fillRect(0, sh, sw, strip);
+    x.textBaseline = 'middle';
+    const line = (txt, y, color, bold) => { let f = fs; do { x.font = (bold ? '700 ' : '400 ') + f + 'px ui-monospace,Menlo,Consolas,monospace'; f -= 1; } while (x.measureText(txt).width > sw - fs * 1.6 && f > 6); if (x.measureText(txt).width > sw - fs * 1.6) { while (txt.length > 8 && x.measureText(txt + '…').width > sw - fs * 1.6) txt = txt.slice(0, -4); txt += '…'; } x.fillStyle = color; x.fillText(txt, fs * .8, y); };
+    const ch = changeList();
+    line('ENHANCED COPY, NOT THE ORIGINAL  |  ' + S.file.name + (S.kind === 'video' ? '  |  frame at ' + clock(video.currentTime) : '') + (S.hash ? '  |  SHA-256 ' + S.hash.slice(0, 16) + '…' : ''), sh + strip * .3, '#f0b23e', true);
+    line(ch.length ? 'Changes: ' + ch.join('; ') : 'No changes applied', sh + strip * .72, '#ece8dd', false);
+  }
+  return c;
+}
+$('#ufw-savephoto').addEventListener('click', async () => {
+  if (!S.canEnhance || S.exporting) return;
+  const c = composeStill(), jpg = S.fmt === 'jpg';
+  const blob = await new Promise(res => c.toBlob(res, jpg ? 'image/jpeg' : 'image/png', jpg ? .95 : undefined));
+  if (!blob) { toast('The picture could not be created. Try the JPEG option, or zoom in and save just that area.'); return; }
+  const tag = S.kind === 'video' ? '_frame-' + clock(video.currentTime).replace(':', 'm').replace('.', 's') : '_enhanced';
+  await saveFile(baseName(S.file.name) + tag + (jpg ? '.jpg' : '.png'), blob);
+});
+
+function recMime() {
+  if (!window.MediaRecorder || !glc.captureStream) return '';
+  for (const m of ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']) { try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (e) {} }
+  return '';
+}
+let rec = null, recState = null;
+function audioTracks() {
+  try {
+    if (!S.ac) { const AC = window.AudioContext || window.webkitAudioContext; S.ac = new AC(); S.srcNode = S.ac.createMediaElementSource(video); S.srcNode.connect(S.ac.destination); }
+    if (S.ac.state === 'suspended') S.ac.resume();
+    const dest = S.ac.createMediaStreamDestination(); S.srcNode.connect(dest);
+    return { tracks: dest.stream.getAudioTracks(), dest };
+  } catch (e) { return { tracks: [], dest: null }; }
+}
+async function startVideoExport() {
+  const mime = recMime(); if (!mime || S.exporting || !S.canEnhance) return;
+  S.exporting = true; video.pause(); S.ready = null; $('#ufw-vready').hidden = true;
+  const vw = video.videoWidth, vh = video.videoHeight, k = Math.min(1, 1920 / Math.max(vw, vh));
+  const ew = Math.round(vw * k / 2) * 2, eh = Math.round(vh * k / 2) * 2;
+  recState = { w: glc.width, h: glc.height, cancelled: false, rate: video.playbackRate, muted: video.muted, chunks: [], dest: null };
+  glc.width = ew; glc.height = eh;
+  $('#ufw-savevideo').disabled = true; $('#ufw-savevideo').textContent = 'Recording…'; $('#ufw-cancelvideo').hidden = false;
+  $('#ufw-prog').hidden = false; $('#ufw-prog').firstElementChild.style.width = '0%';
+  await new Promise(res => { const on = () => { video.removeEventListener('seeked', on); res(); }; video.addEventListener('seeked', on); video.currentTime = 0; setTimeout(on, 1500); });
+  if (!S.exporting) return;
+  frameDirty = true;
+  const fps = Math.max(10, Math.min(60, Math.round(S.fps || 30)));
+  const stream = glc.captureStream(fps);
+  let wantsAudio = $('#ufw-audio').checked && S.hasAudio;
+  if (wantsAudio) { const a = audioTracks(); recState.dest = a.dest; a.tracks.forEach(t => stream.addTrack(t)); if (!a.tracks.length) wantsAudio = false; }
+  let useMime = mime; if (!wantsAudio) useMime = mime.replace(/,(mp4a\.40\.2|opus)/, '');
+  try { rec = new MediaRecorder(stream, { mimeType: useMime, videoBitsPerSecond: Math.max(2e6, Math.min(16e6, ew * eh * fps * .12)) }); }
+  catch (e) { try { rec = new MediaRecorder(stream); } catch (e2) { finishVideoExport(); toast('This browser could not start recording.'); return; } }
+  rec.ondataavailable = e => { if (e.data && e.data.size) recState.chunks.push(e.data); };
+  rec.onstop = async () => {
+    const st = recState, type = (rec.mimeType || useMime).split(';')[0], cancelled = st.cancelled;
+    const blob = new Blob(st.chunks, { type });
+    stream.getTracks().forEach(t => { if (t.kind === 'video') t.stop(); });
+    finishVideoExport();
+    if (cancelled) { toast('Recording cancelled.'); return; }
+    if (!blob.size) { toast('The recording came out empty. Try again with the tab kept in front.'); return; }
+    // Saving needs a fresh tap: browsers block downloads that start long after the last one.
+    S.ready = { blob, name: baseName(S.file.name) + '_enhanced.' + (/mp4/.test(type) ? 'mp4' : 'webm') };
+    $('#ufw-vsave').textContent = 'Save the recorded video (' + bytes(blob.size) + ')';
+    $('#ufw-vready').hidden = false;
+    toast('Recording finished. Tap "Save the recorded video".');
+  };
+  video.muted = false; video.playbackRate = 1;
+  const onEnd = () => { video.removeEventListener('ended', onEnd); if (rec && rec.state !== 'inactive') setTimeout(() => { try { rec.stop(); } catch (e) {} }, 150); };
+  recState.onEnd = onEnd; video.addEventListener('ended', onEnd);
+  rec.start(1000);
+  try { await video.play(); } catch (e) { recState.cancelled = true; try { rec.stop(); } catch (x) {} toast('The video could not be played for recording.'); }
+}
+function finishVideoExport() {
+  const st = recState; if (!st) return;
+  try { video.pause(); } catch (e) {}
+  if (st.onEnd) video.removeEventListener('ended', st.onEnd);
+  if (st.dest && S.srcNode) { try { S.srcNode.disconnect(st.dest); } catch (e) {} }
+  glc.width = st.w; glc.height = st.h; video.playbackRate = st.rate; video.muted = st.muted;
+  S.exporting = false; rec = null; recState = null; frameDirty = true;
+  $('#ufw-savevideo').disabled = !recMime(); $('#ufw-savevideo').textContent = 'Download enhanced video'; $('#ufw-cancelvideo').hidden = true; $('#ufw-prog').hidden = true;
+  layoutView();
+}
+function cancelVideoExport() {
+  if (!S.exporting || !recState) return;
+  recState.cancelled = true;
+  if (rec && rec.state !== 'inactive') { try { rec.stop(); } catch (e) { finishVideoExport(); } } else finishVideoExport();
+}
+$('#ufw-savevideo').addEventListener('click', startVideoExport);
+$('#ufw-cancelvideo').addEventListener('click', cancelVideoExport);
+$('#ufw-vsave').addEventListener('click', () => { if (S.ready) saveFile(S.ready.name, S.ready.blob); });
+
+function notesText() {
+  const f = S.file, L = [], now = new Date();
+  const tz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return ''; } })();
+  L.push('UFO WIZARD EVIDENCE LAB: ANALYSIS NOTES', '=======================================', 'Notes written: ' + niceDate(now) + (tz ? ' (' + tz + ')' : ''), '');
+  L.push('ORIGINAL FILE', '  Name: ' + f.name, '  Kind: ' + (S.kind === 'photo' ? 'Photo' : 'Video') + (f.type ? ' (' + f.type + ')' : ''), '  Size: ' + bytes(f.size) + ' (' + f.size + ' bytes)', '  Last saved on this device: ' + niceDate(new Date(f.lastModified)), '  SHA-256 fingerprint: ' + (S.hash || S.hashNote || 'still being calculated when these notes were saved'), '');
+  if (S.isSample) L.push('  NOTE: this is the built-in practice file, not evidence.', '');
+  L.push('WHAT STANDS OUT');
+  if (S.flags.length) S.flags.forEach(x => L.push('  [' + LEVEL_WORD[x.level].toUpperCase() + '] ' + x.title, '      ' + x.text)); else L.push('  Nothing was flagged.');
+  L.push('', 'KEY FACTS');
+  S.facts.forEach(x => L.push('  ' + x.k + ': ' + String(x.v).replace(/\n/g, '; ') + (x.link ? '\n      Map: ' + x.link : '')));
+  L.push('', 'CHANGES MADE TO THE ENHANCED COPY');
+  const ch = S.canEnhance ? changeList() : [];
+  if (!S.canEnhance) L.push('  None. This file could not be opened for enhancement in this browser.');
+  else if (ch.length) ch.forEach(c => L.push('  ' + c)); else L.push('  None.');
+  if (S.canEnhance && S.scaled) L.push('  Working copy size: ' + S.W + ' x ' + S.H + ' px (original ' + S.origW + ' x ' + S.origH + ' px)');
+  L.push('', 'EVERYTHING IN THE FILE');
+  if (S.groups.length) S.groups.forEach(g => { L.push('  ' + g.name); g.rows.forEach(r => L.push('    ' + (r.raw ? r.k : humanKey(r.k)) + ': ' + r.v)); }); else L.push('  No embedded metadata was found.');
+  L.push('', 'Metadata can be edited or removed, and enhancement can create shapes that were never there.', 'Treat these notes as leads to verify, not as proof. Keep the original file unaltered.', '');
+  return L.join('\r\n');
+}
+async function saveNotes() { if (!S.file) return; await saveFile(baseName(S.file.name) + '_analysis-notes.txt', new Blob([notesText()], { type: 'text/plain' })); }
+$('#ufw-savenotes').addEventListener('click', saveNotes);
+
+/* ---------- wiring ---------- */
+const drop = $('#ufw-drop'), fin = $('#ufw-file');
+fin.addEventListener('change', () => { if (fin.files && fin.files[0]) handleFile(fin.files[0], false); });
+['dragenter', 'dragover'].forEach(ev => root.addEventListener(ev, e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { e.preventDefault(); drop.classList.add('over'); } }));
+['dragleave', 'drop'].forEach(ev => root.addEventListener(ev, () => drop.classList.remove('over')));
+root.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) { e.preventDefault(); handleFile(e.dataTransfer.files[0], false); } });
+$('#ufw-sample').addEventListener('click', async () => { try { handleFile(await makeSample(), true); } catch (e) { toast('The practice photo could not be made in this browser.'); } });
+
+buildControls(); syncControls();
+})();
+</script>
+</body>
+</html>
